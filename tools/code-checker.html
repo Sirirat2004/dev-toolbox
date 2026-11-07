@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Code Checker</title>
+  <script src="https://cdn.jsdelivr.net/npm/htmlhint@1.9.2/dist/htmlhint.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/acorn@8.14.1/dist/acorn.js"></script>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, sans-serif; color: #172033; background: #f4f6fa; }
+    * { box-sizing: border-box; }
+    body { max-width: 1100px; margin: 0 auto; padding: 32px 20px 56px; }
+    h1 { margin: 0 0 8px; font-size: 1.8rem; }
+    p { color: #596579; }
+    .back { display: inline-block; margin-bottom: 20px; color: #2457d6; text-decoration: none; }
+    .tabs, .actions { display: flex; flex-wrap: wrap; gap: 9px; margin: 16px 0 10px; }
+    button { border: 0; border-radius: 8px; padding: 10px 14px; background: #2457d6; color: white; font: inherit; font-weight: 600; cursor: pointer; }
+    button.secondary, .tabs button { background: #e5eaf3; color: #25324a; }
+    .tabs button[aria-selected="true"] { background: #d7e2ff; color: #183e9e; }
+    .editor-panel[hidden] { display: none; }
+    textarea { display: block; width: 100%; min-height: 300px; padding: 15px; border: 1px solid #cbd3df; border-radius: 10px; background: white; color: #172033; font: 14px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; resize: vertical; }
+    .actions { margin: 14px 0; }
+    .status { min-height: 24px; margin: 12px 0; color: #596579; }
+    .summary { margin: 18px 0 10px; padding: 12px 15px; border-radius: 8px; background: white; font-weight: 600; }
+    .report { display: grid; gap: 9px; }
+    .issue { padding: 12px 14px; border-left: 4px solid #d97706; border-radius: 7px; background: white; }
+    .issue.error { border-color: #c62828; }
+    .issue.accessibility { border-color: #6b55be; }
+    .issue-title { font-weight: 700; }
+    .issue p { margin: 5px 0 0; }
+    .empty { color: #596579; padding: 14px; background: white; border-radius: 8px; }
+    iframe { display: block; width: 100%; min-height: 320px; margin-top: 16px; border: 1px solid #cbd3df; border-radius: 10px; background: white; }
+    iframe[hidden] { display: none; }
+    @media (max-width: 600px) { body { padding: 22px 14px 40px; } }
+  </style>
+</head>
+<body>
+  <a class="back" href="../index.html">← All tools</a>
+  <h1>Code Checker</h1>
+  <p>Paste HTML, CSS and JavaScript for quick static checks, or run the page in a sandboxed preview.</p>
+
+  <div class="tabs" role="tablist" aria-label="Code type">
+    <button type="button" role="tab" id="tab-html" aria-selected="true" aria-controls="panel-html">HTML</button>
+    <button type="button" role="tab" id="tab-css" aria-selected="false" aria-controls="panel-css">CSS</button>
+    <button type="button" role="tab" id="tab-js" aria-selected="false" aria-controls="panel-js">JavaScript</button>
+  </div>
+  <section class="editor-panel" id="panel-html" role="tabpanel" aria-labelledby="tab-html">
+    <label for="html-code"><strong>HTML</strong></label>
+    <textarea id="html-code" spellcheck="false"><!doctype html>
+<html>
+<body>
+  <h1 id="title">Welcome</h1>
+  <img src="photo.jpg">
+  <p id="title">This id is repeated.
+</body>
+</html></textarea>
+  </section>
+  <section class="editor-panel" id="panel-css" role="tabpanel" aria-labelledby="tab-css" hidden>
+    <label for="css-code"><strong>CSS</strong></label>
+    <textarea id="css-code" spellcheck="false">.card {
+  colr: red;
+  backgroun: white;
+  padding: 8px;
+}</textarea>
+  </section>
+  <section class="editor-panel" id="panel-js" role="tabpanel" aria-labelledby="tab-js" hidden>
+    <label for="js-code"><strong>JavaScript</strong></label>
+    <textarea id="js-code" spellcheck="false">var unusedTotal = 3;
+function greet(name) {
+  console.log(message);
+}
+greet('friend');</textarea>
+  </section>
+
+  <div class="actions">
+    <button id="check">Check</button>
+    <button id="run" class="secondary">Run and capture errors</button>
+    <button id="copy" class="secondary">Copy report</button>
+  </div>
+  <div id="status" class="status" role="status" aria-live="polite"></div>
+  <div id="summary" class="summary">Run a check to see the summary.</div>
+  <div id="report" class="report" aria-live="polite"></div>
+  <iframe id="preview" title="Sandboxed code preview" sandbox="allow-scripts" hidden></iframe>
+
+  <script>
+    const htmlInput = document.getElementById('html-code');
+    const cssInput = document.getElementById('css-code');
+    const jsInput = document.getElementById('js-code');
+    const report = document.getElementById('report');
+    const summary = document.getElementById('summary');
+    const status = document.getElementById('status');
+    const preview = document.getElementById('preview');
+    let issues = [];
+    let pendingRun = false;
+    let runTimer;
+
+    const fixes = {
+      'tag-pair': 'Add the missing closing tag or correct the nesting.',
+      'id-unique': 'Give each element a different id.',
+      'alt-require': 'Add a short alt description, or use alt="" if the image is decorative.',
+      'html-lang-require': 'Add a language, for example <html lang="en">.',
+      'attr-value-double-quotes': 'Wrap the attribute value in double quotes.',
+      'doctype-first': 'Put <!doctype html> at the start of the document.'
+    };
+
+    function addIssue(type, line, column, explanation, suggestion, category = 'static') {
+      issues.push({ type, line: line || 1, column, explanation, suggestion, category });
+    }
+
+    function lineAt(source, index) { return source.slice(0, index).split('\n').length; }
+
+    function checkHtml(source) {
+      const htmlHint = window.HTMLHint && (window.HTMLHint.HTMLHint || window.HTMLHint);
+      if (!htmlHint || typeof htmlHint.verify !== 'function') throw new Error('HTMLHint did not load. Check your internet connection and reload this page.');
+      const rules = { 'tag-pair': true, 'id-unique': true, 'alt-require': true, 'html-lang-require': true, 'doctype-first': true, 'attr-value-double-quotes': true };
+      const hints = htmlHint.verify(source, rules);
+      let langReported = false;
+      for (const result of hints) {
+        const rule = result.ruleId || (typeof result.rule === 'string' ? result.rule : result.rule && result.rule.id) || 'html';
+        if (rule === 'html-lang-require') langReported = true;
+        const type = result.type === 'error' || rule === 'tag-pair' || rule === 'id-unique' ? 'error' : 'warning';
+        addIssue(type, result.line, result.col, `HTML: ${result.message}`, fixes[rule] || 'Review this HTML and correct the reported issue.');
+      }
+      if (!langReported && !/<html\b[^>]*\blang\s*=\s*(['"])[^'"]+\1/i.test(source)) {
+        addIssue('warning', 1, null, 'HTML: The root <html> element is missing a lang attribute.', 'Add a language, for example <html lang="en">.');
+      }
+    }
+
+    function walk(node, visit, parent = null, key = '') {
+      if (!node || typeof node.type !== 'string') return;
+      visit(node, parent, key);
+      for (const childKey of Object.keys(node)) {
+        if (childKey === 'loc' || childKey === 'start' || childKey === 'end') continue;
+        const value = node[childKey];
+        if (Array.isArray(value)) value.forEach(child => walk(child, visit, node, childKey));
+        else if (value && typeof value.type === 'string') walk(value, visit, node, childKey);
+      }
+    }
+
+    function patternNames(pattern, names = []) {
+      if (!pattern) return names;
+      if (pattern.type === 'Identifier') names.push(pattern);
+      else if (pattern.type === 'RestElement') patternNames(pattern.argument, names);
+      else if (pattern.type === 'AssignmentPattern') patternNames(pattern.left, names);
+      else if (pattern.type === 'ArrayPattern') pattern.elements.forEach(item => patternNames(item, names));
+      else if (pattern.type === 'ObjectPattern') pattern.properties.forEach(item => patternNames(item.type === 'RestElement' ? item.argument : item.value, names));
+      return names;
+    }
+
+    function checkJavaScript(source) {
+      if (!window.acorn || typeof window.acorn.parse !== 'function') throw new Error('Acorn did not load. Check your internet connection and reload this page.');
+      let ast;
+      try { ast = window.acorn.parse(source, { ecmaVersion: 'latest', sourceType: 'script', locations: true, allowHashBang: true }); }
+      catch (error) {
+        addIssue('error', error.loc ? error.loc.line : 1, error.loc ? error.loc.column + 1 : null, `JavaScript syntax error: ${error.message}`, 'Fix the syntax near this line and column, then check again.');
+        return;
+      }
+      const declarations = [];
+      const references = new Map();
+      walk(ast, (node, parent, key) => {
+        if (node.type === 'VariableDeclaration') {
+          if (node.kind === 'var') addIssue('warning', node.loc.start.line, node.loc.start.column + 1, 'JavaScript: “var” is function-scoped and can lead to confusing behavior.', 'Use const when the value will not be reassigned, or let when it will.');
+          for (const item of node.declarations) for (const name of patternNames(item.id)) declarations.push({ name: name.name, loc: name.loc });
+        }
+        if (node.type === 'Identifier') {
+          const isDeclaration = (parent && ((parent.type === 'VariableDeclarator' && key === 'id') || ((parent.type === 'FunctionDeclaration' || parent.type === 'ClassDeclaration') && key === 'id')));
+          const isProperty = parent && ((parent.type === 'MemberExpression' && key === 'property' && !parent.computed) || ((parent.type === 'Property' || parent.type === 'MethodDefinition') && key === 'key' && !parent.computed && !parent.shorthand));
+          const isParameter = parent && (parent.type === 'FunctionDeclaration' || parent.type === 'FunctionExpression' || parent.type === 'ArrowFunctionExpression') && key === 'params';
+          if (!isDeclaration && !isProperty && !isParameter) references.set(node.name, (references.get(node.name) || 0) + 1);
+        }
+      });
+      for (const declaration of declarations) {
+        if (!references.get(declaration.name)) addIssue('warning', declaration.loc.start.line, declaration.loc.start.column + 1, `JavaScript: “${declaration.name}” is declared but never used.`, 'Remove it if it is unnecessary, or use it where intended.');
+      }
+    }
+
+    function checkCss(source) {
+      const css = source.replace(/\/\*[\s\S]*?\*\//g, match => match.replace(/[^\n]/g, ' '));
+      let depth = 0, quote = '';
+      for (let i = 0; i < css.length; i++) {
+        if (quote) {
+          if (css[i] === '\\') i++;
+          else if (css[i] === quote) quote = '';
+          continue;
+        }
+        if (css[i] === '"' || css[i] === "'") quote = css[i];
+        else if (css[i] === '{') depth++;
+        else if (css[i] === '}') {
+          depth--;
+          if (depth < 0) { addIssue('error', lineAt(css, i), null, 'CSS: There is a closing brace without a matching opening brace.', 'Add the missing opening { or remove the extra closing }.'); depth = 0; }
+        }
+      }
+      if (depth > 0) addIssue('error', lineAt(css, css.lastIndexOf('{')), null, 'CSS: One or more blocks are missing a closing brace.', 'Add a } to close each open CSS block.');
+      const declarationPattern = /(?:^|[;{}])\s*([\w-]+)\s*:\s*([^;{}]+)/gm;
+      let declaration;
+      while ((declaration = declarationPattern.exec(css))) {
+        const property = declaration[1];
+        const value = declaration[2].trim();
+        const line = lineAt(css, declaration.index + declaration[0].indexOf(property));
+        if (!property.startsWith('--') && (!window.CSS || !CSS.supports(property, value))) {
+          addIssue('warning', line, null, `CSS: “${property}” is unknown or invalid in this browser.`, `Check the spelling of “${property}” and confirm it is a supported CSS property.`);
+        }
+      }
+    }
+
+    function renderReport() {
+      const rank = { error: 0, accessibility: 1, warning: 2 };
+      issues.sort((a, b) => rank[a.type] - rank[b.type] || a.line - b.line || (a.column || 0) - (b.column || 0));
+      const errors = issues.filter(issue => issue.type === 'error').length;
+      const warnings = issues.filter(issue => issue.type === 'warning').length;
+      const accessibility = issues.filter(issue => issue.type === 'accessibility').length;
+      summary.textContent = `Errors: ${errors} · Warnings: ${warnings} · Accessibility issues: ${accessibility}`;
+      report.replaceChildren();
+      if (!issues.length) {
+        const note = document.createElement('div');
+        note.className = 'empty';
+        note.textContent = 'No issues found by these checks.';
+        report.append(note);
+        return;
+      }
+      for (const issue of issues) {
+        const card = document.createElement('article');
+        card.className = `issue ${issue.type}`;
+        const title = document.createElement('div');
+        title.className = 'issue-title';
+        title.textContent = `${issue.type.toUpperCase()} · line ${issue.line}${issue.column ? `, column ${issue.column}` : ''}`;
+        const explanation = document.createElement('p');
+        explanation.textContent = issue.explanation;
+        const suggestion = document.createElement('p');
+        suggestion.textContent = `Suggested fix: ${issue.suggestion}`;
+        card.append(title, explanation, suggestion);
+        report.append(card);
+      }
+    }
+
+    function checkAll() {
+      issues = [];
+      status.textContent = '';
+      if (!htmlInput.value.trim() && !cssInput.value.trim() && !jsInput.value.trim()) {
+        status.textContent = 'Paste some HTML, CSS or JavaScript first, then run Check.';
+        summary.textContent = 'No code to check.';
+        report.replaceChildren();
+        return false;
+      }
+      try {
+        if (htmlInput.value.trim()) checkHtml(htmlInput.value);
+        if (cssInput.value.trim()) checkCss(cssInput.value);
+        if (jsInput.value.trim()) checkJavaScript(jsInput.value);
+      } catch (error) {
+        status.textContent = error.message || 'A checker library failed to load. Check your internet connection and reload.';
+        summary.textContent = 'Check could not finish.';
+        report.replaceChildren();
+        return false;
+      }
+      renderReport();
+      return true;
+    }
+
+    function escapedScript(source) { return source.replace(/<\/script/gi, '<\\/script'); }
+
+    function instrumentedDocument() {
+      let html = htmlInput.value;
+      const css = cssInput.value;
+      const jsBlock = `<script>${escapedScript(jsInput.value)}<\/script>`;
+      const capture = `<script>
+        function send(kind, detail) { parent.postMessage({ __codeChecker: true, kind, detail: String(detail || '') }, '*'); }
+        const originalError = console.error.bind(console);
+        console.error = (...args) => { send('console', args.join(' ')); originalError(...args); };
+        addEventListener('error', event => { send('exception', event.message || (event.target && (event.target.src || event.target.href)) || 'A resource failed to load'); }, true);
+        addEventListener('unhandledrejection', event => send('exception', event.reason && (event.reason.stack || event.reason.message) || event.reason || 'Unhandled promise rejection'));
+      <\/script>`;
+      const cssBlock = `<style>${css.replace(/<\/style/gi, '<\\/style')}</style>`;
+      if (/<html\b/i.test(html)) {
+        if (/<head\b[^>]*>/i.test(html)) html = html.replace(/<head\b[^>]*>/i, match => match + capture + cssBlock);
+        else html = capture + cssBlock + html;
+      } else html = `<!doctype html><html><head>${capture}${cssBlock}</head><body>${html}</body></html>`;
+      const axeAndRunner = `<script src="https://cdn.jsdelivr.net/npm/axe-core@4.10.3/axe.min.js"><\/script><script>
+        if (!window.axe) send('library', 'axe-core did not load. Accessibility checks were skipped.');
+        else axe.run().then(results => {
+          for (const violation of results.violations) send('a11y', violation.id + ': ' + violation.help + ' (impact: ' + violation.impact + ')');
+          send('done', 'Accessibility scan finished.');
+        }).catch(error => send('library', 'Accessibility scan failed: ' + error.message));
+      <\/script>`;
+      if (/<\/body\s*>/i.test(html)) return html.replace(/<\/body\s*>/i, jsBlock + axeAndRunner + '</body>');
+      return html + jsBlock + axeAndRunner;
+    }
+
+    document.getElementById('check').addEventListener('click', checkAll);
+
+    document.getElementById('run').addEventListener('click', () => {
+      if (!htmlInput.value.trim() && !cssInput.value.trim() && !jsInput.value.trim()) {
+        status.textContent = 'Paste some code first, then run the sandboxed preview.';
+        return;
+      }
+      if (!checkAll()) return;
+      pendingRun = true;
+      preview.hidden = false;
+      preview.srcdoc = instrumentedDocument();
+      status.textContent = 'Running code in the sandbox and checking accessibility…';
+      clearTimeout(runTimer);
+      runTimer = setTimeout(() => {
+        if (pendingRun) { pendingRun = false; status.textContent = 'The preview did not finish. A library may have failed to load or the page may still be running.'; }
+      }, 12000);
+    });
+
+    window.addEventListener('message', event => {
+      if (event.source !== preview.contentWindow || !event.data || event.data.__codeChecker !== true) return;
+      const { kind, detail } = event.data;
+      if (kind === 'console' || kind === 'exception') addIssue('error', 1, null, `${kind === 'console' ? 'Console error' : 'Runtime exception'}: ${detail}`, 'Review the message and fix the reported runtime problem.', 'runtime');
+      if (kind === 'a11y') addIssue('accessibility', 1, null, `Accessibility: ${detail}`, 'Follow the axe-core guidance for the affected element.', 'accessibility');
+      if (kind === 'library') status.textContent = detail;
+      if (kind === 'done') { pendingRun = false; clearTimeout(runTimer); status.textContent = detail; }
+      renderReport();
+    });
+
+    document.getElementById('copy').addEventListener('click', async () => {
+      const text = `CODE CHECK REPORT\n\nSummary: ${summary.textContent}\n\nFindings:\n${issues.length ? issues.map(issue => `${issue.type.toUpperCase()} line ${issue.line}${issue.column ? `, column ${issue.column}` : ''}: ${issue.explanation} Suggested fix: ${issue.suggestion}`).join('\n') : 'No issues recorded.'}\n\n===== HTML =====\n${htmlInput.value}\n\n===== CSS =====\n${cssInput.value}\n\n===== JAVASCRIPT =====\n${jsInput.value}`;
+      try {
+        await navigator.clipboard.writeText(text);
+        status.textContent = 'Report and pasted code copied to the clipboard.';
+      } catch {
+        status.textContent = 'Clipboard access was blocked. Please copy the report and code manually.';
+      }
+    });
+
+    document.querySelectorAll('[role="tab"]').forEach(tab => tab.addEventListener('click', () => {
+      document.querySelectorAll('[role="tab"]').forEach(item => item.setAttribute('aria-selected', String(item === tab)));
+      document.querySelectorAll('[role="tabpanel"]').forEach(panel => { panel.hidden = panel.id !== tab.getAttribute('aria-controls'); });
+    }));
+  </script>
+</body>
+</html>

@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UX Checker</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, sans-serif; color: #172033; background: #f4f6fa; }
+    * { box-sizing: border-box; }
+    body { max-width: 1100px; margin: 0 auto; padding: 32px 20px 56px; }
+    h1 { margin: 0 0 8px; font-size: 1.8rem; }
+    p { color: #596579; }
+    .back { display: inline-block; margin-bottom: 20px; color: #2457d6; text-decoration: none; }
+    .tabs, .actions, .filters { display: flex; flex-wrap: wrap; gap: 9px; margin: 16px 0 10px; }
+    button { border: 0; border-radius: 8px; padding: 10px 14px; background: #2457d6; color: white; font: inherit; font-weight: 600; cursor: pointer; }
+    button.secondary, .tabs button, .filters button { background: #e5eaf3; color: #25324a; }
+    .tabs button[aria-selected="true"], .filters button[aria-pressed="true"] { background: #d7e2ff; color: #183e9e; }
+    .editor-panel[hidden] { display: none; }
+    textarea { display: block; width: 100%; min-height: 250px; padding: 15px; border: 1px solid #cbd3df; border-radius: 10px; background: white; color: #172033; font: 14px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; resize: vertical; }
+    .optional { margin-top: 16px; }
+    .optional textarea { min-height: 74px; }
+    .actions { margin: 14px 0; }
+    .status { min-height: 24px; margin: 12px 0; color: #596579; }
+    .summary { margin: 18px 0 10px; padding: 12px 15px; border-radius: 8px; background: white; font-weight: 600; }
+    .preview-wrap { overflow: auto; padding: 2px 0; }
+    iframe { display: block; width: 375px; min-height: 420px; margin: 0; border: 1px solid #cbd3df; border-radius: 10px; background: white; }
+    iframe[hidden] { display: none; }
+    .results { display: grid; gap: 14px; }
+    .category-group { display: grid; gap: 8px; }
+    .category-group h3 { margin: 10px 0 0; font-size: 1.05rem; }
+    .finding { padding: 12px 14px; border-left: 4px solid #d97706; border-radius: 7px; background: white; }
+    .finding.error { border-color: #c62828; }
+    .finding.passed { border-color: #17804e; }
+    .finding-title { font-weight: 700; }
+    .finding p { margin: 5px 0 8px; }
+    .finding button { padding: 7px 10px; font-size: .9rem; }
+    .empty { color: #596579; padding: 14px; background: white; border-radius: 8px; }
+    @media (max-width: 600px) { body { padding: 22px 14px 40px; } }
+  </style>
+</head>
+<body>
+  <a class="back" href="../index.html">← All tools</a>
+  <h1>UX Checker</h1>
+  <p>Preview a page at three widths and review layout, readability, touch targets, content and forms.</p>
+
+  <div class="tabs" role="tablist" aria-label="Code type">
+    <button type="button" role="tab" id="tab-html" aria-selected="true" aria-controls="panel-html">HTML</button>
+    <button type="button" role="tab" id="tab-css" aria-selected="false" aria-controls="panel-css">CSS</button>
+    <button type="button" role="tab" id="tab-js" aria-selected="false" aria-controls="panel-js">JavaScript</button>
+  </div>
+  <section class="editor-panel" id="panel-html" role="tabpanel" aria-labelledby="tab-html">
+    <label for="html-code"><strong>HTML</strong></label>
+    <textarea id="html-code" spellcheck="false"><!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Sample shop</title></head><body>
+  <header><h1>Welcome to the shop</h1><h1>TODO: Seasonal offers</h1><button class="menu">Menu</button></header>
+  <main>
+    <p>Lorem ipsum dolor sit amet. TODO replace this copy.</p>
+    <img src="missing-photo.png">
+    <section class="actions"><button>Buy now</button><button>BUY LATER</button><a href="#">Learn more</a><button aria-label=""> </button></section>
+    <section class="contact"><h2>Contact Us</h2><input name="email" placeholder="Email address"><button>Submit</button></section>
+  </main>
+</body></html></textarea>
+  </section>
+  <section class="editor-panel" id="panel-css" role="tabpanel" aria-labelledby="tab-css" hidden>
+    <label for="css-code"><strong>CSS</strong></label>
+    <textarea id="css-code" spellcheck="false">body { margin: 0; font: 16px Arial, sans-serif; color: #aaa; }
+header { padding: 12px; display: flex; justify-content: space-between; }
+main { width: 900px; margin: auto; }
+button, a { min-width: 28px; min-height: 30px; margin: 4px 22px; }
+.actions { display: flex; gap: 4px; }
+.menu { position: absolute; left: 8px; top: 8px; }
+h1 { font-size: 20px; }</textarea>
+  </section>
+  <section class="editor-panel" id="panel-js" role="tabpanel" aria-labelledby="tab-js" hidden>
+    <label for="js-code"><strong>JavaScript</strong></label>
+    <textarea id="js-code" spellcheck="false">document.querySelector('.menu').addEventListener('click', () => {
+  document.body.classList.toggle('menu-open');
+});</textarea>
+  </section>
+
+  <div class="optional">
+    <label for="features"><strong>Required features</strong> <span>(optional, one per line)</span></label>
+    <textarea id="features" placeholder="login button&#10;search box&#10;contact form"></textarea>
+  </div>
+  <div class="optional">
+    <label for="palette"><strong>Brand palette</strong> <span>(optional, hex colors one per line)</span></label>
+    <textarea id="palette" placeholder="#2457d6&#10;#172033&#10;#ffffff"></textarea>
+  </div>
+
+  <div class="actions">
+    <button id="run">Run UX checks</button>
+    <button id="copy" class="secondary">Copy report</button>
+  </div>
+  <div id="status" class="status" role="status" aria-live="polite"></div>
+  <div id="summary" class="summary">Run the UX checks to see a summary.</div>
+  <div id="filters" class="filters" aria-label="Filter results by category"></div>
+  <div class="preview-wrap"><iframe id="preview" title="Sandboxed page preview" sandbox="allow-scripts" hidden></iframe></div>
+  <div id="results" class="results" aria-live="polite"></div>
+
+  <script>
+    const htmlInput = document.getElementById('html-code');
+    const cssInput = document.getElementById('css-code');
+    const jsInput = document.getElementById('js-code');
+    const featureInput = document.getElementById('features');
+    const paletteInput = document.getElementById('palette');
+    const preview = document.getElementById('preview');
+    const status = document.getElementById('status');
+    const summary = document.getElementById('summary');
+    const resultsEl = document.getElementById('results');
+    const filtersEl = document.getElementById('filters');
+    const widths = [375, 768, 1280];
+    let findings = [];
+    let activeFilter = 'All';
+
+    function uxMeasure() {
+      const report = [];
+      const contrastRatio = (one, two) => {
+        const luminance = color => {
+          const channels = color.map(value => value / 255).map(value => value <= .04045 ? value / 12.92 : Math.pow((value + .055) / 1.055, 2.4));
+          return .2126 * channels[0] + .7152 * channels[1] + .0722 * channels[2];
+        };
+        const values = [luminance(one), luminance(two)].sort((a, b) => b - a);
+        return (values[0] + .05) / (values[1] + .05);
+      };
+      const palette = (window.__brandPalette || []).map(hex => {
+        const value = hex.replace('#', '');
+        const full = value.length === 3 ? value.split('').map(char => char + char).join('') : value;
+        return { hex: '#' + full.toLowerCase(), rgb: [0, 2, 4].map(index => parseInt(full.slice(index, index + 2), 16)) };
+      });
+      let nextId = 0;
+      const all = Array.from(document.querySelectorAll('body *'));
+      all.forEach(element => element.setAttribute('data-ux-check-id', `ux-${++nextId}`));
+      const visible = element => {
+        const style = getComputedStyle(element);
+        return style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) !== 0 && element.getClientRects().length > 0;
+      };
+      const textOf = element => (element.innerText || element.textContent || '').replace(/\s+/g, ' ').trim();
+      const describe = element => {
+        const tag = element.tagName.toLowerCase();
+        const id = element.id ? '#' + element.id : '';
+        const classes = (typeof element.className === 'string' ? element.className : '').trim().split(/\s+/).filter(Boolean).slice(0, 2).map(name => '.' + name).join('');
+        const text = textOf(element) || element.getAttribute('aria-label') || element.getAttribute('placeholder') || '';
+        const short = text.length > 44 ? text.slice(0, 41) + '…' : text;
+        return `${tag}${id}${classes}${short ? ` “${short}”` : ''}`;
+      };
+      const ids = element => element ? [element.getAttribute('data-ux-check-id')].filter(Boolean) : [];
+      const add = (severity, category, rule, element, measurements, fix, targets = [element]) => {
+        report.push({ severity, category, rule, element: element ? describe(element) : 'Page', measurements, fix, targetIds: [...new Set(targets.flatMap(ids))] });
+      };
+      const parseColor = value => {
+        const match = value.match(/rgba?\(([^)]+)\)/i);
+        if (!match) return null;
+        const parts = match[1].split(/[\s,\/]+/).filter(Boolean).map(Number);
+        if (parts.length < 3 || parts.slice(0, 3).some(Number.isNaN)) return null;
+        return { rgb: parts.slice(0, 3).map(channel => Math.round(channel)), alpha: parts.length > 3 ? parts[3] : 1 };
+      };
+      const hexColor = rgb => '#' + rgb.map(channel => Math.max(0, Math.min(255, channel)).toString(16).padStart(2, '0')).join('');
+      const backgroundFor = element => {
+        let current = element;
+        while (current && current.nodeType === 1) {
+          const color = parseColor(getComputedStyle(current).backgroundColor);
+          if (color && color.alpha > 0) return color.rgb.map(channel => Math.round(channel * color.alpha + 255 * (1 - color.alpha)));
+          current = current.parentElement;
+        }
+        return [255, 255, 255];
+      };
+      const width = window.innerWidth;
+
+      // Alignment, spacing, and overlap checks among elements that share a parent.
+      let alignmentCount = 0, overlapCount = 0, gapCount = 0, clippingCount = 0;
+      for (const parent of [document.body, ...all]) {
+        const children = Array.from(parent.children || []).filter(element => visible(element) && !['SCRIPT', 'STYLE', 'LINK', 'META'].includes(element.tagName));
+        const boxes = children.map(element => ({ element, rect: element.getBoundingClientRect() })).filter(item => item.rect.width > 0 && item.rect.height > 0);
+        for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+          const first = boxes[i], second = boxes[j], a = first.rect, b = second.rect;
+          const horizontal = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+          const vertical = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+          if (horizontal > 2 && vertical > 2) {
+            overlapCount++;
+            add('error', 'Alignment', 'Overlapping siblings', first.element, `${describe(first.element)} intersects ${describe(second.element)} by ${Math.round(horizontal)}×${Math.round(vertical)} px.`, 'Add space between these elements or adjust their positioning so their boxes do not overlap.', [first.element, second.element]);
+          }
+          if (vertical > 2) {
+            const leftDiff = Math.abs(a.left - b.left), rightDiff = Math.abs(a.right - b.right);
+            if ((leftDiff >= 1 && leftDiff <= 4) || (rightDiff >= 1 && rightDiff <= 4)) {
+              alignmentCount++;
+              add('warning', 'Alignment', 'Near alignment', first.element, `Sibling edges differ by ${Math.round(Math.min(leftDiff, rightDiff))} px at ${width}px width.`, 'Align the corresponding edges to the same grid value.', [first.element, second.element]);
+            }
+          }
+        }
+        const verticalBoxes = boxes.filter(item => item.rect.height > 4).sort((a, b) => a.rect.top - b.rect.top);
+        const gaps = [];
+        for (let i = 1; i < verticalBoxes.length; i++) {
+          const prior = verticalBoxes[i - 1], next = verticalBoxes[i];
+          const overlap = Math.min(prior.rect.right, next.rect.right) - Math.max(prior.rect.left, next.rect.left);
+          const gap = next.rect.top - prior.rect.bottom;
+          if (overlap > Math.min(prior.rect.width, next.rect.width) * .35 && gap >= 0 && gap < 180) gaps.push({ gap, prior, next });
+        }
+        if (gaps.length > 1) {
+          const values = gaps.map(item => Math.round(item.gap));
+          if (Math.max(...values) - Math.min(...values) > 4) {
+            gapCount++;
+            add('warning', 'Alignment', 'Uneven sibling gaps', parent, `Vertical gaps: ${values.join(', ')} px at ${width}px width.`, 'Use a consistent gap or spacing scale for these siblings.', [gaps[0].prior.element, gaps[gaps.length - 1].next.element]);
+          }
+        }
+        const horizontalBoxes = boxes.filter(item => item.rect.width > 4).sort((a, b) => a.rect.left - b.rect.left);
+        const horizontalGaps = [];
+        for (let i = 1; i < horizontalBoxes.length; i++) {
+          const prior = horizontalBoxes[i - 1], next = horizontalBoxes[i];
+          const overlap = Math.min(prior.rect.bottom, next.rect.bottom) - Math.max(prior.rect.top, next.rect.top);
+          const gap = next.rect.left - prior.rect.right;
+          if (overlap > Math.min(prior.rect.height, next.rect.height) * .35 && gap >= 0 && gap < 180) horizontalGaps.push({ gap, prior, next });
+        }
+        if (horizontalGaps.length > 1) {
+          const values = horizontalGaps.map(item => Math.round(item.gap));
+          if (Math.max(...values) - Math.min(...values) > 4) {
+            gapCount++;
+            add('warning', 'Alignment', 'Uneven sibling gaps', parent, `Horizontal gaps: ${values.join(', ')} px at ${width}px width.`, 'Use a consistent gap or spacing scale for these siblings.', [horizontalGaps[0].prior.element, horizontalGaps[horizontalGaps.length - 1].next.element]);
+          }
+        }
+      }
+      for (const element of all.filter(visible)) {
+        if (!textOf(element)) continue;
+        const rect = element.getBoundingClientRect();
+        if ((element.scrollWidth > element.clientWidth + 1) || (element.scrollHeight > element.clientHeight + 1)) {
+          clippingCount++;
+          add('error', 'Alignment', 'Clipped or overflowing text', element, `Content box ${element.clientWidth}×${element.clientHeight}px; scroll size ${element.scrollWidth}×${element.scrollHeight}px at ${width}px width.`, 'Let the text wrap or enlarge its container; avoid clipping it with overflow hidden.');
+        }
+      }
+      const pageWidth = Math.max(document.documentElement.scrollWidth, document.body.scrollWidth);
+      if (pageWidth > width + 1) add('error', 'Responsive', 'Horizontal page scroll', document.body, `Page width ${pageWidth}px exceeds viewport ${width}px.`, 'Use flexible widths and constrain wide content so the page fits this viewport.');
+      else add('passed', 'Responsive', 'No horizontal page scroll', document.body, `Page width fits the ${width}px viewport.`, '');
+      if (!alignmentCount && !overlapCount && !gapCount && !clippingCount) add('passed', 'Alignment', 'Layout spacing check passed', document.body, `No alignment, gap, overlap or text overflow issues found at ${width}px.`, '');
+
+      // Touch targets.
+      let smallTargets = 0;
+      const controls = all.filter(element => visible(element) && (element.matches('button, a[href], input[type="button"], input[type="submit"], input[type="reset"]')));
+      for (const element of controls) {
+        const rect = element.getBoundingClientRect();
+        if (rect.width < 44 || rect.height < 44) {
+          smallTargets++;
+          add('warning', 'Touch targets', 'Small touch target', element, `Measured ${Math.round(rect.width)}×${Math.round(rect.height)} px at ${width}px width.`, 'Increase the clickable area to at least 44×44 px, including with padding.');
+        }
+      }
+      if (!smallTargets) add('passed', 'Touch targets', 'Touch targets pass', document.body, `All visible buttons and links are at least 44×44 px at ${width}px.`, '');
+
+      // Contrast and palette review.
+      const colors = new Set();
+      let lowContrast = 0;
+      for (const element of all.filter(visible)) {
+        const visibleStyle = getComputedStyle(element);
+        const visibleForeground = parseColor(visibleStyle.color);
+        const visibleBackground = backgroundFor(element);
+        if (visibleForeground) colors.add(hexColor(visibleForeground.rgb));
+        colors.add(hexColor(visibleBackground));
+        const directText = Array.from(element.childNodes).some(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+        if (!directText) continue;
+        const style = getComputedStyle(element);
+        const foreground = parseColor(style.color);
+        const background = backgroundFor(element);
+        if (!foreground) continue;
+        const fg = foreground.rgb.map(channel => Math.round(channel * foreground.alpha + background[0] * (1 - foreground.alpha)));
+        colors.add(hexColor(fg));
+        colors.add(hexColor(background));
+        const ratio = contrastRatio(fg, background);
+        const large = parseFloat(style.fontSize) >= 24 || (parseFloat(style.fontSize) >= 18.66 && parseInt(style.fontWeight, 10) >= 700);
+        const threshold = large ? 3 : 4.5;
+        if (ratio < threshold) {
+          lowContrast++;
+          add('error', 'Colors', 'Low text contrast', element, `${ratio.toFixed(2)}:1; minimum ${threshold}:1; text ${hexColor(fg)} on ${hexColor(background)} at ${width}px.`, 'Choose a text or background color with stronger contrast.');
+        }
+      }
+      add('passed', 'Colors', 'Distinct colors used', document.body, [...colors].sort().join(', ') || 'No visible text colors found.', '');
+      if (palette.length) {
+        let outsidePalette = 0;
+        for (const hex of colors) {
+          const rgb = [0, 2, 4].map(index => parseInt(hex.slice(index + 1, index + 3), 16));
+          const nearest = palette.map(item => ({ ...item, distance: Math.sqrt(item.rgb.reduce((sum, channel, index) => sum + Math.pow(channel - rgb[index], 2), 0)) })).sort((a, b) => a.distance - b.distance)[0];
+          if (!palette.some(item => item.hex === hex)) {
+            outsidePalette++;
+            const close = nearest && nearest.distance <= 18;
+            add('warning', 'Colors', close ? 'Near-match brand color' : 'Color outside brand palette', document.body, `${hex} ${close ? `is close to ${nearest.hex} (distance ${nearest.distance.toFixed(0)}).` : `is not in the supplied palette; nearest is ${nearest ? nearest.hex : 'none'}.`}`, 'Use an exact palette color or update the brand palette if this color is intentional.');
+          }
+        }
+        if (!outsidePalette) add('passed', 'Colors', 'Brand palette match', document.body, 'All measured text and background colors are in the supplied palette.', '');
+      }
+
+      // Copy and placeholder text, accessible names, links, labels, and imagery.
+      let textCount = 0;
+      const placeholderWords = /lorem\s+ipsum|\bTODO\b|\bTBD\b|\bxxx\b/i;
+      for (const element of all.filter(visible)) {
+        const text = textOf(element);
+        const direct = Array.from(element.childNodes).filter(node => node.nodeType === Node.TEXT_NODE).map(node => node.textContent).join(' ').trim();
+        if (direct && placeholderWords.test(direct)) {
+          textCount++;
+          add('warning', 'Text', 'Placeholder copy', element, `Found “${direct.match(placeholderWords)[0]}”.`, 'Replace the placeholder with final, user-facing copy.');
+        }
+        if (element.matches('button, a[href]')) {
+          const accessibleName = (element.getAttribute('aria-label') || text || Array.from(element.querySelectorAll('img[alt]')).map(img => img.alt).join(' ')).trim();
+          if (!accessibleName) {
+            textCount++;
+            add('error', 'Text', element.tagName === 'BUTTON' ? 'Empty button' : 'Empty link', element, 'No visible text or accessible name.', 'Add a short label or an aria-label that describes the action.');
+          }
+          if (element.matches('a[href="#"]')) {
+            textCount++;
+            add('warning', 'Text', 'Placeholder link target', element, 'Link uses href="#".', 'Link to the real destination or use a button for an action.');
+          }
+        }
+      }
+      const buttons = controls.filter(element => element.matches('button, input[type="button"], input[type="submit"], input[type="reset"]'));
+      const buttonNames = new Map();
+      for (const button of buttons) {
+        const label = (button.getAttribute('aria-label') || textOf(button) || button.value || '').replace(/\s+/g, ' ').trim();
+        if (!label) continue;
+        const key = label.toLocaleLowerCase();
+        if (buttonNames.has(key)) {
+          textCount++;
+          add('warning', 'Text', 'Duplicate button label', button, `“${label}” is also used by ${describe(buttonNames.get(key))}.`, 'Give buttons distinct labels when they perform different actions.', [button, buttonNames.get(key)]);
+        } else buttonNames.set(key, button);
+      }
+      const groups = new Map();
+      for (const parent of [document.body, ...all]) {
+        for (const element of Array.from(parent.children || []).filter(visible)) {
+          const kind = element.matches('button') ? 'buttons' : (/^H[1-6]$/.test(element.tagName) ? 'headings' : '');
+          if (!kind) continue;
+          const key = `${parent.getAttribute('data-ux-check-id') || 'root'}:${kind}`;
+          if (!groups.has(key)) groups.set(key, []);
+          groups.get(key).push(element);
+        }
+      }
+      const capitalization = text => {
+        const words = text.match(/[A-Za-z]+/g) || [];
+        if (!words.length) return 'other';
+        if (text === text.toUpperCase()) return 'UPPERCASE';
+        if (text === text.toLowerCase()) return 'lowercase';
+        if (words.every(word => word[0] === word[0].toUpperCase() && word.slice(1) === word.slice(1).toLowerCase())) return 'Title Case';
+        return 'mixed case';
+      };
+      for (const group of groups.values()) {
+        const labeled = group.map(element => ({ element, text: textOf(element), casing: capitalization(textOf(element)) })).filter(item => item.text);
+        if (labeled.length > 1 && new Set(labeled.map(item => item.casing)).size > 1) {
+          textCount++;
+          add('warning', 'Text', 'Inconsistent capitalization', labeled[0].element, labeled.map(item => `${item.text} (${item.casing})`).join('; '), 'Use the same capitalization style for sibling buttons or headings.', labeled.map(item => item.element));
+        }
+      }
+      const h1s = all.filter(element => element.tagName === 'H1' && visible(element));
+      if (h1s.length > 1) {
+        textCount++;
+        add('warning', 'Text', 'Multiple h1 headings', h1s[0], `${h1s.length} visible h1 elements found.`, 'Keep one main page heading and use h2 and lower headings for sections.', h1s);
+      }
+      if (!textCount && h1s.length <= 1) add('passed', 'Text', 'Text checks passed', document.body, 'No placeholder copy, empty controls, duplicate button labels or capitalization issues found.', '');
+
+      let formImageCount = 0;
+      for (const element of all.filter(visible)) {
+        if (element.matches('input:not([type="hidden"]), select, textarea')) {
+          const id = element.id;
+          const labeled = !!(element.getAttribute('aria-label') || element.getAttribute('aria-labelledby')) || Array.from(document.querySelectorAll('label')).some(label => label.htmlFor === id && !!id || label.contains(element));
+          if (!labeled) {
+            formImageCount++;
+            add('error', 'Forms & images', 'Form control without a label', element, 'No associated <label>, aria-label or aria-labelledby found.', 'Add a visible label linked with for/id, or supply an accessible aria-label.');
+          }
+        }
+        if (element.tagName === 'IMG') {
+          if (!element.hasAttribute('alt')) {
+            formImageCount++;
+            add('error', 'Forms & images', 'Image missing alt text', element, `Image source: ${element.getAttribute('src') || '(no src)'}.`, 'Add useful alt text, or alt="" for a decorative image.');
+          }
+          if (element.complete && element.naturalWidth === 0) {
+            formImageCount++;
+            add('warning', 'Forms & images', 'Image failed to load', element, `Image source: ${element.currentSrc || element.src || '(no src)'}.`, 'Check the image URL and ensure the file is available.');
+          }
+        }
+      }
+      if (!formImageCount) add('passed', 'Forms & images', 'Forms and images pass', document.body, 'Visible controls are labeled and images have alt text and loaded.', '');
+
+      // Required-feature matching across visible copy and common identifying attributes.
+      const requirements = window.__requiredFeatures || [];
+      for (const requirement of requirements) {
+        const query = requirement.toLocaleLowerCase();
+        const match = all.find(element => visible(element) && [textOf(element), element.getAttribute('placeholder'), element.getAttribute('aria-label'), element.getAttribute('alt'), element.id, element.getAttribute('name')].filter(Boolean).join(' ').toLocaleLowerCase().includes(query));
+        add(match ? 'passed' : 'error', 'Required features', match ? 'Required feature found' : 'Required feature missing', match || document.body, `${match ? 'Found' : 'Missing'}: “${requirement}”${match ? ` in ${describe(match)}.` : '.'}`, match ? '' : 'Add this feature and give it visible or accessible text that clearly names it.', match ? [match] : []);
+      }
+      if (!requirements.length) add('passed', 'Required features', 'No required features supplied', document.body, 'Feature matching was skipped because the box is empty.', '');
+
+      return { width, report };
+    }
+
+    function escapeUserScript(source) { return source.replace(new RegExp('<' + '/script', 'gi'), '<\\/' + 'script'); }
+    function escapeStyle(source) { return source.replace(new RegExp('<' + '/style', 'gi'), '<\\/' + 'style'); }
+
+    function buildSrcdoc() {
+      const palette = paletteInput.value.split(/\r?\n/).map(line => line.trim()).filter(value => /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(value));
+      const features = featureInput.value.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+      const measureScript = '<' + 'script>window.__brandPalette=' + JSON.stringify(palette) + ';window.__requiredFeatures=' + JSON.stringify(features) + ';window.__uxCheckerMeasure=' + uxMeasure.toString() + ';<' + '/script>';
+      const cssBlock = '<style>' + escapeStyle(cssInput.value) + '</style>';
+      const viewport = '<meta name="viewport" content="width=device-width, initial-scale=1">';
+      const capture = '<' + 'script>(function(){function send(data){parent.postMessage(Object.assign({__uxChecker:true},data),"*");}addEventListener("error",function(e){if(e.message)send({kind:"runtime",message:e.message,line:e.lineno||1,column:e.colno||null});},true);addEventListener("unhandledrejection",function(e){send({kind:"runtime",message:String(e.reason&&e.reason.message||e.reason||"Unhandled promise rejection"),line:1});});addEventListener("message",function(e){if(e.source!==parent||!e.data||e.data.__uxChecker!==true)return;if(e.data.kind==="measure"){try{send({kind:"measurement",result:window.__uxMeasureNow(e.data.width)});}catch(error){send({kind:"measure-error",message:error.message||String(error)});}}if(e.data.kind==="highlight"){document.querySelectorAll("[data-ux-check-id]").forEach(function(el){el.style.outline="";el.style.outlineOffset="";});var targets=e.data.targetIds||[];targets.forEach(function(id){var el=document.querySelector("[data-ux-check-id=\\\""+id+"\\\"]");if(el){el.style.outline="3px solid #f59e0b";el.style.outlineOffset="2px";el.scrollIntoView({block:"center",inline:"nearest"});}});}});window.__uxMeasureNow=function(){return window.__uxCheckerMeasure.apply(null,arguments);};})();<' + '/script>';
+      let html = htmlInput.value;
+      const userScript = jsInput.value.trim() ? '<' + 'script>' + escapeUserScript(jsInput.value) + '<' + '/script>' : '';
+      if (/<html\b/i.test(html)) {
+        if (/<head\b[^>]*>/i.test(html)) html = html.replace(/<head\b[^>]*>/i, match => match + viewport + cssBlock + capture + measureScript);
+        else html = html.replace(/<html\b[^>]*>/i, match => match + '<head>' + viewport + cssBlock + capture + measureScript + '</head>');
+        if (userScript) {
+          if (/<\/body\s*>/i.test(html)) html = html.replace(/<\/body\s*>/i, userScript + '</body>');
+          else html += userScript;
+        }
+      } else html = '<!doctype html><html><head>' + viewport + cssBlock + capture + measureScript + '</head><body>' + html + userScript + '</body></html>';
+      return html;
+    }
+
+    function mergeResults(width, incoming) {
+      for (const item of incoming) {
+        const key = [item.category, item.rule, item.element, item.fix].join('|');
+        let existing = findings.find(result => result.key === key);
+        if (!existing) {
+          existing = { ...item, key, widths: [], measurementsByWidth: {} };
+          findings.push(existing);
+        }
+        if (!existing.widths.includes(width)) existing.widths.push(width);
+        existing.measurementsByWidth[width] = item.measurements;
+        existing.targetIds = item.targetIds.length ? item.targetIds : existing.targetIds;
+      }
+    }
+
+    function renderResults() {
+      const rank = { error: 0, warning: 1, passed: 2 };
+      const ordered = [...findings].sort((a, b) => rank[a.severity] - rank[b.severity] || a.category.localeCompare(b.category) || a.element.localeCompare(b.element));
+      const counts = { error: 0, warning: 0, passed: 0 };
+      for (const item of findings) counts[item.severity]++;
+      summary.textContent = `Errors: ${counts.error} · Warnings: ${counts.warning} · Passed: ${counts.passed}`;
+      const categories = ['All', ...new Set(ordered.map(item => item.category))];
+      filtersEl.replaceChildren();
+      for (const category of categories) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = category;
+        button.setAttribute('aria-pressed', String(activeFilter === category));
+        button.addEventListener('click', () => { activeFilter = category; renderResults(); });
+        filtersEl.append(button);
+      }
+      resultsEl.replaceChildren();
+      const shown = ordered.filter(item => activeFilter === 'All' || item.category === activeFilter);
+      if (!shown.length) {
+        const empty = document.createElement('div'); empty.className = 'empty'; empty.textContent = 'No results in this category.'; resultsEl.append(empty); return;
+      }
+      const categoryOrder = [...new Set(shown.map(item => item.category))].sort((a, b) => {
+        const ar = Math.min(...shown.filter(item => item.category === a).map(item => rank[item.severity]));
+        const br = Math.min(...shown.filter(item => item.category === b).map(item => rank[item.severity]));
+        return ar - br || a.localeCompare(b);
+      });
+      for (const category of categoryOrder) {
+        const section = document.createElement('section'); section.className = 'category-group';
+        const heading = document.createElement('h3'); heading.textContent = category; section.append(heading);
+        for (const item of shown.filter(result => result.category === category).sort((a, b) => rank[a.severity] - rank[b.severity])) {
+          const card = document.createElement('article'); card.className = `finding ${item.severity}`;
+          const title = document.createElement('div'); title.className = 'finding-title'; title.textContent = `${item.severity.toUpperCase()} · ${item.rule} · ${item.element}`;
+          const measured = document.createElement('p');
+          const perWidth = item.widths.length ? item.widths.map(width => `${width}px: ${item.measurementsByWidth[width]}`).join(' · ') : (item.measurements || 'No measurement value.');
+          measured.textContent = perWidth;
+          if (item.severity !== 'passed' && item.widths.length < widths.length) measured.textContent += ` · Responsive: seen only at ${item.widths.map(width => `${width}px`).join(', ')}.`;
+          const fix = document.createElement('p'); fix.textContent = item.fix ? `Suggested fix: ${item.fix}` : 'Check passed.';
+          const highlight = document.createElement('button'); highlight.type = 'button'; highlight.className = 'secondary'; highlight.textContent = 'Highlight'; highlight.disabled = !item.targetIds.length;
+          highlight.addEventListener('click', () => preview.contentWindow.postMessage({ __uxChecker: true, kind: 'highlight', targetIds: item.targetIds }, '*'));
+          card.append(title, measured, fix, highlight); section.append(card);
+        }
+        resultsEl.append(section);
+      }
+    }
+
+    async function requestMeasurement(width) {
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => { window.removeEventListener('message', receive); reject(new Error('The preview did not respond to a measurement request.')); }, 5000);
+        function receive(event) {
+          if (event.source !== preview.contentWindow || !event.data || event.data.__uxChecker !== true) return;
+          if (event.data.kind === 'measurement') { clearTimeout(timer); window.removeEventListener('message', receive); resolve(event.data.result); }
+          if (event.data.kind === 'measure-error') { clearTimeout(timer); window.removeEventListener('message', receive); reject(new Error(event.data.message)); }
+        }
+        window.addEventListener('message', receive);
+        preview.contentWindow.postMessage({ __uxChecker: true, kind: 'measure', width }, '*');
+      });
+    }
+
+    document.getElementById('run').addEventListener('click', async () => {
+      if (!htmlInput.value.trim() && !cssInput.value.trim() && !jsInput.value.trim()) {
+        status.textContent = 'Paste some HTML, CSS or JavaScript first, then run the UX checks.';
+        return;
+      }
+      status.textContent = 'Rendering the page in a sandbox and measuring three widths…';
+      findings = []; activeFilter = 'All'; preview.hidden = false;
+      preview.style.width = `${widths[0]}px`;
+      try {
+        const loaded = new Promise((resolve, reject) => {
+          const timer = setTimeout(() => reject(new Error('The preview did not finish loading. Check the pasted HTML and JavaScript.')), 12000);
+          preview.onload = () => { clearTimeout(timer); resolve(); };
+          preview.onerror = () => { clearTimeout(timer); reject(new Error('The preview could not be loaded.')) };
+        });
+        preview.srcdoc = buildSrcdoc();
+        await loaded;
+        await new Promise(resolve => setTimeout(resolve, 150));
+        for (const width of widths) {
+          preview.style.width = `${width}px`;
+          await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+          const result = await requestMeasurement(width);
+          mergeResults(width, result.report);
+          status.textContent = `Measured ${width}px. Checking remaining widths…`;
+        }
+        preview.style.width = '100%';
+        renderResults();
+        status.textContent = 'UX checks complete. Use Highlight on a result to locate its element in the preview.';
+      } catch (error) {
+        preview.style.width = '100%';
+        status.textContent = error.message || 'The UX checks could not finish. Please check the pasted code and try again.';
+      }
+    });
+
+    document.getElementById('copy').addEventListener('click', async () => {
+      const reportText = findings.length ? findings.map(item => `${item.severity.toUpperCase()} [${item.category}] ${item.rule} — ${item.element}\n${item.widths.length ? item.widths.map(width => `${width}px: ${item.measurementsByWidth[width]}`).join('\n') : item.measurements || 'No measurement value.'}\nSuggested fix: ${item.fix || 'Passed.'}`).join('\n\n') : 'No UX report yet.';
+      const text = `UX CHECK REPORT\n\n${summary.textContent}\n\n${reportText}\n\n===== HTML =====\n${htmlInput.value}\n\n===== CSS =====\n${cssInput.value}\n\n===== JAVASCRIPT =====\n${jsInput.value}\n\n===== REQUIRED FEATURES =====\n${featureInput.value}\n\n===== BRAND PALETTE =====\n${paletteInput.value}`;
+      try { await navigator.clipboard.writeText(text); status.textContent = 'Report and pasted code copied to the clipboard.'; }
+      catch { status.textContent = 'Clipboard access was blocked. Please copy the report and code manually.'; }
+    });
+
+    window.addEventListener('message', event => {
+      if (event.source !== preview.contentWindow || !event.data || event.data.__uxChecker !== true) return;
+      if (event.data.kind === 'runtime') {
+        const detail = `Line ${event.data.line || 1}${event.data.column ? `, column ${event.data.column}` : ''}: ${event.data.message}`;
+        const key = `Runtime|${detail}`;
+        if (!findings.some(item => item.key === key)) {
+          findings.push({ key, severity: 'error', category: 'Runtime', rule: 'Runtime exception', element: 'Preview page', measurements: detail, fix: 'Review the error and correct the JavaScript that caused it.', targetIds: [], widths: [], measurementsByWidth: {} });
+          renderResults();
+        }
+      }
+    });
+
+    document.querySelectorAll('[role="tab"]').forEach(tab => tab.addEventListener('click', () => {
+      document.querySelectorAll('[role="tab"]').forEach(item => item.setAttribute('aria-selected', String(item === tab)));
+      document.querySelectorAll('[role="tabpanel"]').forEach(panel => { panel.hidden = panel.id !== tab.getAttribute('aria-controls'); });
+    }));
+  </script>
+</body>
+</html>

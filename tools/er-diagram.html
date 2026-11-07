@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SQL to ER Diagram</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"></script>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, sans-serif; color: #172033; background: #f4f6fa; }
+    * { box-sizing: border-box; }
+    body { max-width: 1100px; margin: 0 auto; padding: 32px 20px 56px; }
+    h1 { margin: 0 0 8px; font-size: 1.8rem; }
+    p { color: #596579; margin: 0 0 18px; }
+    textarea { display: block; width: 100%; min-height: 300px; padding: 16px; border: 1px solid #cbd3df; border-radius: 10px; background: white; color: #172033; font: 14px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; resize: vertical; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0 18px; }
+    .options { display: flex; flex-wrap: wrap; align-items: end; gap: 14px; margin: 18px 0 8px; }
+    .option { display: grid; gap: 5px; color: #25324a; font-size: .9rem; }
+    select { min-width: 190px; padding: 9px 10px; border: 1px solid #cbd3df; border-radius: 8px; background: white; color: #172033; font: inherit; }
+    .check-option { display: flex; align-items: center; gap: 7px; min-height: 40px; color: #25324a; }
+    button, .back { border: 0; border-radius: 8px; padding: 10px 15px; background: #2457d6; color: white; font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; }
+    button.secondary { background: #e5eaf3; color: #25324a; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .message { min-height: 24px; margin: 10px 0; color: #b42318; }
+    .message.success { color: #167647; }
+    .panel { overflow: auto; min-height: 180px; padding: 20px; border: 1px solid #dce2eb; border-radius: 10px; background: white; }
+    .panel svg { max-width: 100%; height: auto; }
+    .legend { margin: 10px 2px 0; color: #596579; font-size: .9rem; }
+    .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 24px 0 10px; }
+    h2 { margin: 0; font-size: 1.2rem; }
+    .code { margin-top: 16px; }
+    pre { overflow: auto; padding: 14px; border-radius: 8px; background: #172033; color: #eef3ff; white-space: pre-wrap; }
+    .back { display: inline-block; margin-bottom: 20px; background: transparent; color: #2457d6; padding-left: 0; }
+    @media (max-width: 600px) { body { padding: 22px 14px 40px; } .toolbar { align-items: flex-start; flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <a class="back" href="../index.html">← All tools</a>
+  <h1>SQL to ER Diagram</h1>
+  <p>Paste SQL <code>CREATE TABLE</code> statements, then generate a Mermaid ER diagram.</p>
+  <label for="sql"><strong>SQL schema</strong></label>
+  <textarea id="sql" spellcheck="false">CREATE TABLE customers (
+  id INT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(255) UNIQUE
+);
+
+CREATE TABLE orders (
+  id INT PRIMARY KEY,
+  customer_id INT NOT NULL,
+  order_date DATE,
+  total DECIMAL(10, 2),
+  FOREIGN KEY (customer_id) REFERENCES customers(id)
+);
+
+CREATE TABLE order_items (
+  order_id INT NOT NULL,
+  product_id INT NOT NULL,
+  quantity INT NOT NULL,
+  PRIMARY KEY (order_id, product_id),
+  FOREIGN KEY (order_id) REFERENCES orders(id)
+);</textarea>
+  <div class="options">
+    <label class="option" for="diagram-style">Diagram style
+      <select id="diagram-style">
+        <option value="er">Crow's foot (standard ER)</option>
+        <option value="simple">Simple (1 and *)</option>
+      </select>
+    </label>
+    <label class="option" for="layout">Layout
+      <select id="layout">
+        <option value="TB">Top-to-bottom</option>
+        <option value="LR">Left-to-right</option>
+      </select>
+    </label>
+    <label class="check-option"><input id="compact" type="checkbox"> Compact</label>
+  </div>
+  <div class="actions">
+    <button id="generate">Generate</button>
+    <button id="load-sample" class="secondary">Load sample</button>
+    <button id="copy" class="secondary" disabled>Copy Mermaid code</button>
+    <button id="download" class="secondary" disabled>Download SVG</button>
+  </div>
+  <div id="message" class="message" role="status" aria-live="polite"></div>
+  <div class="toolbar"><h2>Diagram</h2></div>
+  <div id="diagram" class="panel" aria-label="Generated ER diagram">Your diagram will appear here.</div>
+  <p id="legend" class="legend">PK = primary key · FK = foreign key · || = one · o{ = zero or many</p>
+  <section class="code">
+    <h2>Mermaid code</h2>
+    <pre id="mermaid-code">Generate a diagram to see its Mermaid code.</pre>
+  </section>
+  <script>
+    mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'neutral', themeVariables: { fontSize: '18px' }, suppressErrorRendering: true });
+
+    const sqlInput = document.getElementById('sql');
+    const message = document.getElementById('message');
+    const diagram = document.getElementById('diagram');
+    const codeOutput = document.getElementById('mermaid-code');
+    const copyButton = document.getElementById('copy');
+    const downloadButton = document.getElementById('download');
+    const styleSelect = document.getElementById('diagram-style');
+    const layoutSelect = document.getElementById('layout');
+    const compactToggle = document.getElementById('compact');
+    const legend = document.getElementById('legend');
+    const sampleSchema = `CREATE TABLE customers (
+  id INT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(255) UNIQUE
+);
+
+CREATE TABLE orders (
+  id INT PRIMARY KEY,
+  customer_id INT NOT NULL,
+  order_date DATE,
+  total DECIMAL(10, 2),
+  FOREIGN KEY (customer_id) REFERENCES customers(id)
+);
+
+CREATE TABLE order_items (
+  order_id INT NOT NULL,
+  product_id INT NOT NULL,
+  quantity INT NOT NULL,
+  PRIMARY KEY (order_id, product_id),
+  FOREIGN KEY (order_id) REFERENCES orders(id)
+);`;
+    let currentSvg = '';
+    let currentCode = '';
+
+    function splitTopLevel(text) {
+      const parts = [];
+      let start = 0, depth = 0, quote = '';
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        if (quote) {
+          if (char === quote && text[i + 1] === quote) i++;
+          else if (char === quote) quote = '';
+          continue;
+        }
+        if (char === "'" || char === '"' || char === '`') quote = char;
+        else if (char === '(') depth++;
+        else if (char === ')') depth--;
+        else if (char === ',' && depth === 0) { parts.push(text.slice(start, i).trim()); start = i + 1; }
+      }
+      if (text.slice(start).trim()) parts.push(text.slice(start).trim());
+      return parts;
+    }
+
+    function cleanIdentifier(value) {
+      return value.trim().replace(/^[`"[]|[`"\]]$/g, '');
+    }
+
+    function parseSchema(source) {
+      const sql = source.replace(/--[^\n\r]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+      const tablePattern = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?((?:[`"\[]?[\w$]+[`"\]]?\s*\.\s*)?[`"\[]?[\w$]+[`"\]]?)\s*\(/gi;
+      const tables = new Map();
+      const foreignKeys = [];
+      let match;
+      while ((match = tablePattern.exec(sql))) {
+        const open = tablePattern.lastIndex - 1;
+        let depth = 1, quote = '', close = open + 1;
+        for (; close < sql.length && depth; close++) {
+          const char = sql[close];
+          if (quote) {
+            if (char === quote && sql[close + 1] === quote) close++;
+            else if (char === quote) quote = '';
+          } else if (char === "'" || char === '"' || char === '`') quote = char;
+          else if (char === '(') depth++;
+          else if (char === ')') depth--;
+        }
+        if (depth !== 0) throw new Error(`The CREATE TABLE statement for “${match[1]}” has an unclosed parenthesis.`);
+        const body = sql.slice(open + 1, close - 1);
+        tablePattern.lastIndex = close;
+        const rawName = match[1].split('.').pop();
+        const name = cleanIdentifier(rawName);
+        if (!/^[A-Za-z_][\w$]*$/.test(name)) throw new Error(`The table name “${name}” is not supported.`);
+        if (tables.has(name.toLowerCase())) throw new Error(`“${name}” is defined more than once.`);
+        const table = { name, columns: [], primaryKeys: [] };
+        const parts = splitTopLevel(body);
+        for (const part of parts) {
+          let item = part.trim().replace(/^CONSTRAINT\s+[`"\[]?[\w$]+[`"\]]?\s+/i, '');
+          let keyMatch = item.match(/^(?:PRIMARY\s+KEY|UNIQUE\s+KEY|UNIQUE|KEY|INDEX|FOREIGN\s+KEY)\b/i);
+          if (keyMatch) {
+            if (/^PRIMARY\s+KEY/i.test(item)) {
+              const keys = item.match(/\(([^)]+)\)/);
+              if (!keys) throw new Error(`Could not read the primary key for “${name}”.`);
+              table.primaryKeys.push(...keys[1].split(',').map(cleanIdentifier));
+            } else if (/^FOREIGN\s+KEY/i.test(item)) {
+              const fk = item.match(/^FOREIGN\s+KEY\s*\(([^)]+)\)\s*REFERENCES\s+((?:[`"\[]?[\w$]+[`"\]]?\s*\.\s*)?[`"\[]?[\w$]+[`"\]]?)\s*\(([^)]+)\)/i);
+              if (!fk) throw new Error(`Could not read a foreign key in “${name}”.`);
+              foreignKeys.push({ from: name, columns: fk[1].split(',').map(cleanIdentifier), to: cleanIdentifier(fk[2].split('.').pop()), targetColumns: fk[3].split(',').map(cleanIdentifier) });
+            }
+            continue;
+          }
+          const columnMatch = item.match(/^([`"\[]?[\w$]+[`"\]]?)\s+(.+)$/s);
+          if (!columnMatch) throw new Error(`Could not read this column or constraint in “${name}”: ${item.slice(0, 45)}`);
+          const columnName = cleanIdentifier(columnMatch[1]);
+          const definition = columnMatch[2];
+          const typeMatch = definition.match(/^([A-Za-z][\w]*(?:\s*\([^)]*\))?(?:\s+(?:UNSIGNED|PRECISION|VARYING))?)/i);
+          if (!typeMatch) throw new Error(`Could not read the type of “${columnName}” in “${name}”.`);
+          const type = typeMatch[1].replace(/\s+/g, ' ').trim();
+          table.columns.push({ name: columnName, type });
+          if (/\bPRIMARY\s+KEY\b/i.test(definition)) table.primaryKeys.push(columnName);
+          const inlineFk = definition.match(/\bREFERENCES\s+((?:[`"\[]?[\w$]+[`"\]]?\s*\.\s*)?[`"\[]?[\w$]+[`"\]]?)\s*\(([^)]+)\)/i);
+          if (inlineFk) foreignKeys.push({ from: name, columns: [columnName], to: cleanIdentifier(inlineFk[1].split('.').pop()), targetColumns: inlineFk[2].split(',').map(cleanIdentifier) });
+        }
+        if (!table.columns.length) throw new Error(`No columns were found for “${name}”.`);
+        tables.set(name.toLowerCase(), table);
+      }
+      if (!tables.size) throw new Error('No CREATE TABLE statements found. Include complete statements ending with a closing parenthesis and semicolon.');
+      for (const fk of foreignKeys) {
+        const target = tables.get(fk.to.toLowerCase());
+        const sourceTable = tables.get(fk.from.toLowerCase());
+        if (!target) throw new Error(`Foreign key in “${fk.from}” points to “${fk.to}”, which is not defined in the pasted SQL.`);
+        for (const column of [...fk.columns, ...fk.targetColumns]) {
+          if (column.includes(',')) continue;
+          const owner = fk.columns.includes(column) ? sourceTable : target;
+          if (!owner.columns.some(c => c.name.toLowerCase() === column.toLowerCase())) throw new Error(`Foreign key column “${column}” was not found in “${owner.name}”.`);
+        }
+      }
+      return { tables: [...tables.values()], foreignKeys };
+    }
+
+    function relationshipLabel(fk) {
+      const target = fk.to.toLowerCase().replace(/s$/, '');
+      const matchesTarget = fk.columns.length === 1 && fk.columns[0].toLowerCase().replace(/_id$|id$/i, '') === target;
+      return matchesTarget ? 'has' : fk.columns.join(', ');
+    }
+
+    function toMermaid(schema) {
+      const simple = styleSelect.value === 'simple';
+      const direction = layoutSelect.value;
+      const lines = [simple ? 'classDiagram' : 'erDiagram', `    direction ${direction}`];
+      const foreignKeyColumns = new Set();
+      for (const fk of schema.foreignKeys) for (const column of fk.columns) foreignKeyColumns.add(`${fk.from.toLowerCase()}.${column.toLowerCase()}`);
+      for (const table of schema.tables) {
+        lines.push(simple ? `    class ${table.name} {` : `    ${table.name} {`);
+        for (const column of table.columns) {
+          const isPrimary = table.primaryKeys.some(k => k.toLowerCase() === column.name.toLowerCase());
+          const isForeign = foreignKeyColumns.has(`${table.name.toLowerCase()}.${column.name.toLowerCase()}`);
+          if (compactToggle.checked && !isPrimary && !isForeign) continue;
+          const keys = [isPrimary ? 'PK' : '', isForeign ? 'FK' : ''].filter(Boolean);
+          let type = column.type;
+          if (type.includes(',')) type = type.replace(/\(/g, '_').replace(/\)/g, '').replace(/,/g, '_');
+          type = type.replace(/\s+/g, '_').replace(/[^A-Za-z0-9_()]/g, '').replace(/_+/g, '_') || 'UNKNOWN';
+          lines.push(simple
+            ? `        +${column.name}: ${type}${keys.length ? ` ${keys.join(' ')}` : ''}`
+            : `        ${type} ${column.name}${keys.length ? ` ${keys.join(', ')}` : ''}`);
+        }
+        lines.push('    }');
+      }
+      for (const fk of schema.foreignKeys) {
+        const label = relationshipLabel(fk);
+        lines.push(simple
+          ? `    ${fk.to} "1" <-- "*" ${fk.from} : ${label}`
+          : `    ${fk.to} ||--o{ ${fk.from} : "${label}"`);
+      }
+      legend.textContent = simple
+        ? 'PK = primary key · FK = foreign key · 1 = one referenced row · * = many rows holding the foreign key'
+        : 'PK = primary key · FK = foreign key · || = one · o{ = zero or many';
+      return lines.join('\n');
+    }
+
+    document.getElementById('generate').addEventListener('click', async () => {
+      message.textContent = '';
+      message.className = 'message';
+      copyButton.disabled = downloadButton.disabled = true;
+      let rendering = false;
+      try {
+        const schema = parseSchema(sqlInput.value);
+        const code = toMermaid(schema);
+        rendering = true;
+        const result = await mermaid.render('erDiagramSvg', code);
+        currentCode = code;
+        currentSvg = result.svg;
+        diagram.innerHTML = result.svg;
+        codeOutput.textContent = code;
+        copyButton.disabled = downloadButton.disabled = false;
+        message.textContent = `Generated ${schema.tables.length} table${schema.tables.length === 1 ? '' : 's'}.`;
+        message.className = 'message success';
+      } catch (error) {
+        currentSvg = currentCode = '';
+        diagram.replaceChildren();
+        codeOutput.textContent = 'No Mermaid code available.';
+        message.textContent = rendering
+          ? 'The diagram could not be rendered. Check the SQL types and try again.'
+          : error.message || 'Something went wrong while parsing the SQL. Please check the statements and try again.';
+      }
+    });
+
+    document.getElementById('load-sample').addEventListener('click', () => {
+      sqlInput.value = sampleSchema;
+      message.textContent = '';
+      message.className = 'message';
+    });
+
+    copyButton.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(currentCode);
+        message.textContent = 'Mermaid code copied to the clipboard.';
+        message.className = 'message success';
+      } catch {
+        message.textContent = 'Clipboard access was blocked. Select and copy the Mermaid code below.';
+        message.className = 'message';
+      }
+    });
+
+    downloadButton.addEventListener('click', () => {
+      const blob = new Blob([currentSvg], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'er-diagram.svg';
+      link.click();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
