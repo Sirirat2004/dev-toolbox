@@ -3,22 +3,153 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Project ByMe Tools</title>
-  <style>
-    body { max-width: 760px; margin: 60px auto; padding: 0 20px; font: 16px/1.5 system-ui, sans-serif; color: #172033; }
-    h1 { margin-bottom: 8px; }
-    p { color: #596579; }
-    a { color: #2457d6; }
-    li { margin: 10px 0; }
-  </style>
+  <meta name="description" content="A small collection of free browser tools for developers.">
+  <script>(function(){var theme='system';try{var saved=localStorage.getItem('dev-toolbox-theme');if(saved==='light'||saved==='dark'||saved==='system')theme=saved;}catch(e){}document.documentElement.setAttribute('data-theme',theme);var lang='en';try{var l=localStorage.getItem('dev-toolbox-language');if(l==='th'||l==='zh-CN')lang=l;else if(!l){var b=(navigator.language||'').toLowerCase();lang=b.indexOf('th')===0?'th':b.indexOf('zh')===0?'zh-CN':'en';}}catch(e){}document.documentElement.lang=lang;}());</script>
+  <script defer src="assets/i18n.js"></script>
+  <title>Dev Toolbox — Browser tools for developers</title>
+  <link rel="stylesheet" href="assets/style.css">
 </head>
-<body>
-  <h1>Project ByMe Tools</h1>
-  <p>Small browser based tools.</p>
-  <ul>
-    <li><a href="tools/er-diagram.html">SQL to ER Diagram</a></li>
-    <li><a href="tools/code-checker.html">Code Checker</a></li>
-    <li><a href="tools/ux-checker.html">UX Checker</a></li>
-  </ul>
+<body class="landing-page">
+  <header class="top-nav">
+    <div class="container nav-inner">
+      <a class="brand" href="index.html">Dev Toolbox</a>
+      <nav class="nav-links" aria-label="Main navigation" data-i18n-aria="Main navigation">
+        <a href="#tools" data-i18n="Tools">Tools</a>
+        <a href="#about" data-i18n="About">About</a>
+        <a href="https://github.com/">GitHub</a>
+      </nav>
+      <div class="nav-actions">
+        <select class="language-select" aria-label="Language" data-i18n-aria="Language"><option value="en">EN</option><option value="th">ไทย</option><option value="zh-CN">中文</option></select>
+        <button class="theme-button" type="button" aria-label="Theme: System" data-i18n-aria="Theme"><span class="theme-icon" aria-hidden="true">◐</span><span class="theme-label" data-i18n="System">System</span></button>
+        <a class="button button-secondary" href="https://github.com/" data-i18n="GitHub">GitHub</a>
+        <a class="button button-primary" href="#tools" data-i18n="Open tools">Open tools</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero container" aria-labelledby="hero-heading">
+      <span class="badge"><span aria-hidden="true">✦</span> <span data-i18n="Free browser tools for developers">Free browser tools for developers</span></span>
+      <h1 id="hero-heading" data-i18n="Less busywork. More building.">Less busywork.<br><span>More building.</span></h1>
+      <p class="hero-copy" data-i18n="A practical collection of lightweight tools for turning everyday development tasks into quick browser workflows.">A practical collection of lightweight tools for turning everyday development tasks into quick browser workflows.</p>
+      <div class="hero-actions">
+        <a class="button button-primary" href="#tools"><span data-i18n="Open tools">Open tools</span> <span aria-hidden="true">→</span></a>
+        <a class="button button-secondary" href="https://github.com/" data-i18n="View on GitHub">View on GitHub</a>
+      </div>
+      <div class="chips" aria-label="Tool highlights">
+        <span class="chip" data-i18n="ER diagrams">ER diagrams</span>
+        <span class="chip" data-i18n="Code checker">Code checker</span>
+        <span class="chip" data-i18n="UX audit">UX audit</span>
+      </div>
+    </section>
+
+    <section id="tools" class="container" aria-labelledby="tools-heading">
+      <div class="tool-window card">
+        <div class="window-bar">
+          <div class="window-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+          <div class="window-title" data-i18n="Developer workspace">Developer workspace</div>
+          <span class="pill" data-i18n="3 tools">3 tools</span>
+        </div>
+        <div class="window-layout">
+          <aside class="tool-sidebar" aria-label="Tool categories" data-i18n-aria="Tool categories">
+            <p class="sidebar-label" data-i18n="Workspace">Workspace</p>
+            <button class="sidebar-item active" type="button" data-category="all" aria-pressed="true" data-i18n="All tools">All tools</button>
+            <button class="sidebar-item" type="button" data-category="diagram" aria-pressed="false" data-i18n="Diagrams">Diagrams</button>
+            <button class="sidebar-item" type="button" data-category="code" aria-pressed="false" data-i18n="Code quality">Code quality</button>
+            <button class="sidebar-item" type="button" data-category="ux" aria-pressed="false" data-i18n="UX & testing">UX &amp; testing</button>
+          </aside>
+          <div class="window-content">
+            <div class="table-toolbar">
+              <div>
+                <h2 id="tools-heading" data-i18n="All tools">All tools</h2>
+                <p class="tool-description" data-i18n="Pick a tool to get started.">Pick a tool to get started.</p>
+              </div>
+              <label class="search-box">
+                <span class="visually-hidden" data-i18n="Search tools">Search tools</span>
+                <input id="tool-search" type="search" placeholder="Search tools…" data-i18n-placeholder="Search tools" autocomplete="off">
+              </label>
+            </div>
+            <table class="tool-table">
+              <thead><tr><th scope="col" data-i18n="Name">Name</th><th scope="col" data-i18n="Description">Description</th><th scope="col" data-i18n="Type">Type</th><th scope="col"><span class="visually-hidden" data-i18n="Open">Open</span></th></tr></thead>
+              <tbody id="tool-rows">
+                <tr data-category="diagram">
+                  <td data-label="Name" data-i18n-label="Name"><a class="tool-name" href="tools/er-diagram.html" data-i18n="SQL to ER Diagram">SQL to ER Diagram</a></td>
+                  <td data-label="Description" data-i18n-label="Description"><p class="tool-description" data-i18n="Turn CREATE TABLE statements into a visual database diagram.">Turn CREATE TABLE statements into a visual database diagram.</p></td>
+                  <td data-label="Type" data-i18n-label="Type"><span class="pill" data-i18n="Diagram">Diagram</span></td>
+                  <td data-label=""><a class="button button-secondary open-link" href="tools/er-diagram.html" data-i18n="Open">Open</a></td>
+                </tr>
+                <tr data-category="code">
+                  <td data-label="Name" data-i18n-label="Name"><a class="tool-name" href="tools/code-checker.html" data-i18n="Code Checker">Code Checker</a></td>
+                  <td data-label="Description" data-i18n-label="Description"><p class="tool-description" data-i18n="Find common HTML, CSS and JavaScript issues and inspect a sandboxed preview.">Find common HTML, CSS and JavaScript issues and inspect a sandboxed preview.</p></td>
+                  <td data-label="Type" data-i18n-label="Type"><span class="pill" data-i18n="Code quality">Code quality</span></td>
+                  <td data-label=""><a class="button button-secondary open-link" href="tools/code-checker.html" data-i18n="Open">Open</a></td>
+                </tr>
+                <tr data-category="ux">
+                  <td data-label="Name" data-i18n-label="Name"><a class="tool-name" href="tools/ux-checker.html" data-i18n="UX Checker">UX Checker</a></td>
+                  <td data-label="Description" data-i18n-label="Description"><p class="tool-description" data-i18n="Review responsive layouts, contrast, touch targets and page content.">Review responsive layouts, contrast, touch targets and page content.</p></td>
+                  <td data-label="Type" data-i18n-label="Type"><span class="pill" data-i18n="UX & testing">UX &amp; testing</span></td>
+                  <td data-label=""><a class="button button-secondary open-link" href="tools/ux-checker.html" data-i18n="Open">Open</a></td>
+                </tr>
+              </tbody>
+            </table>
+            <p id="no-tools" class="empty-state" hidden data-i18n="No tools match that search.">No tools match that search.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="about" class="landing-footer container">
+    <p data-i18n="Dev Toolbox is a personal collection of small, browser-based developer utilities.">Dev Toolbox is a personal collection of small, browser-based developer utilities.</p>
+  </footer>
+
+  <script>
+    const search = document.getElementById('tool-search');
+    const rows = [...document.querySelectorAll('#tool-rows tr')];
+    const categoryButtons = [...document.querySelectorAll('.sidebar-item')];
+    const heading = document.getElementById('tools-heading');
+    const noTools = document.getElementById('no-tools');
+    let activeCategory = 'all';
+
+    function filterTools() {
+      const query = search.value.trim().toLowerCase();
+      let visibleCount = 0;
+      for (const row of rows) {
+        const categoryMatches = activeCategory === 'all' || row.dataset.category === activeCategory;
+        const searchMatches = row.textContent.toLowerCase().includes(query);
+        row.hidden = !(categoryMatches && searchMatches);
+        if (!row.hidden) visibleCount++;
+      }
+      noTools.hidden = visibleCount > 0;
+    }
+
+    search.addEventListener('input', filterTools);
+    categoryButtons.forEach(button => button.addEventListener('click', () => {
+      activeCategory = button.dataset.category;
+      categoryButtons.forEach(item => {
+        item.classList.toggle('active', item === button);
+        item.setAttribute('aria-pressed', String(item === button));
+      });
+      heading.textContent = button.textContent.trim();
+      filterTools();
+    }));
+
+    (function(){
+      const root=document.documentElement;
+      const button=document.querySelector('.theme-button');
+      const icon=button.querySelector('.theme-icon');
+      const label=button.querySelector('.theme-label');
+      const order=['system','light','dark'];
+      const media=window.matchMedia('(prefers-color-scheme: dark)');
+      let preference=root.getAttribute('data-theme')||'system';
+      function resolved(){return preference==='system'?(media.matches?'dark':'light'):preference;}
+      function refresh(){const next=order[(order.indexOf(preference)+1)%order.length];label.textContent=preference[0].toUpperCase()+preference.slice(1);icon.textContent=resolved()==='dark'?'☾':'☀';button.setAttribute('aria-label',`Theme: ${preference}. Activate to switch to ${next}.`);button.title=`Current theme: ${preference}`;}
+      function apply(value,save){preference=value;root.setAttribute('data-theme',value);if(save){try{localStorage.setItem('dev-toolbox-theme',value);}catch(e){}}refresh();window.dispatchEvent(new CustomEvent('toolbox-theme-change',{detail:{preference,resolvedTheme:resolved()}}));}
+      button.addEventListener('click',()=>apply(order[(order.indexOf(preference)+1)%order.length],true));
+      if(media.addEventListener)media.addEventListener('change',()=>{if(preference==='system'){refresh();window.dispatchEvent(new CustomEvent('toolbox-theme-change',{detail:{preference,resolvedTheme:resolved()}}));}});
+      else if(media.addListener)media.addListener(()=>{if(preference==='system')refresh();});
+      refresh();
+    }());
+  </script>
 </body>
 </html>

@@ -3,41 +3,49 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SQL to ER Diagram</title>
+  <script>(function(){var theme='system';try{var saved=localStorage.getItem('dev-toolbox-theme');if(saved==='light'||saved==='dark'||saved==='system')theme=saved;}catch(e){}document.documentElement.setAttribute('data-theme',theme);var lang='en';try{var l=localStorage.getItem('dev-toolbox-language');if(l==='th'||l==='zh-CN')lang=l;else if(!l){var b=(navigator.language||'').toLowerCase();lang=b.indexOf('th')===0?'th':b.indexOf('zh')===0?'zh-CN':'en';}}catch(e){}document.documentElement.lang=lang;}());</script>
+  <script defer src="../assets/i18n.js"></script>
+  <title data-i18n="SQL to ER Diagram">SQL to ER Diagram</title>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"></script>
   <style>
-    :root { color-scheme: light; font-family: system-ui, sans-serif; color: #172033; background: #f4f6fa; }
+    :root { font-family: var(--font-stack); }
     * { box-sizing: border-box; }
     body { max-width: 1100px; margin: 0 auto; padding: 32px 20px 56px; }
     h1 { margin: 0 0 8px; font-size: 1.8rem; }
-    p { color: #596579; margin: 0 0 18px; }
-    textarea { display: block; width: 100%; min-height: 300px; padding: 16px; border: 1px solid #cbd3df; border-radius: 10px; background: white; color: #172033; font: 14px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; resize: vertical; }
+    p { color: var(--muted-text); margin: 0 0 18px; }
+    textarea { display: block; width: 100%; min-height: 300px; padding: 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); font: 14px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; resize: vertical; }
     .actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0 18px; }
     .options { display: flex; flex-wrap: wrap; align-items: end; gap: 14px; margin: 18px 0 8px; }
-    .option { display: grid; gap: 5px; color: #25324a; font-size: .9rem; }
-    select { min-width: 190px; padding: 9px 10px; border: 1px solid #cbd3df; border-radius: 8px; background: white; color: #172033; font: inherit; }
-    .check-option { display: flex; align-items: center; gap: 7px; min-height: 40px; color: #25324a; }
-    button, .back { border: 0; border-radius: 8px; padding: 10px 15px; background: #2457d6; color: white; font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; }
-    button.secondary { background: #e5eaf3; color: #25324a; }
+    .option { display: grid; gap: 5px; color: var(--text); font-size: .9rem; }
+    select { min-width: 190px; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; }
+    .check-option { display: flex; align-items: center; gap: 7px; min-height: 40px; color: var(--text); }
+    button, .back { border: 0; border-radius: 10px; padding: 10px 15px; background: var(--primary-button-bg); color: var(--primary-button-text); font: inherit; font-weight: 600; cursor: pointer; text-decoration: none; }
+    button.secondary { border: 1px solid var(--border); background: var(--secondary-button-bg); color: var(--secondary-button-text); }
     button:disabled { opacity: .5; cursor: not-allowed; }
-    .message { min-height: 24px; margin: 10px 0; color: #b42318; }
-    .message.success { color: #167647; }
-    .panel { overflow: auto; min-height: 180px; padding: 20px; border: 1px solid #dce2eb; border-radius: 10px; background: white; }
+    .message { min-height: 24px; margin: 10px 0; color: var(--error-text); }
+    .message.success { color: var(--success-text); }
+    .panel { overflow: auto; min-height: 180px; padding: 20px; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); }
     .panel svg { max-width: 100%; height: auto; }
-    .legend { margin: 10px 2px 0; color: #596579; font-size: .9rem; }
+    .legend { margin: 10px 2px 0; color: var(--muted-text); font-size: .9rem; }
     .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 24px 0 10px; }
     h2 { margin: 0; font-size: 1.2rem; }
     .code { margin-top: 16px; }
-    pre { overflow: auto; padding: 14px; border-radius: 8px; background: #172033; color: #eef3ff; white-space: pre-wrap; }
-    .back { display: inline-block; margin-bottom: 20px; background: transparent; color: #2457d6; padding-left: 0; }
+    pre { overflow: auto; padding: 14px; border-radius: 12px; background: var(--code-bg); color: var(--code-text); white-space: pre-wrap; }
+    .back { display: inline-block; margin-bottom: 20px; background: transparent; color: var(--accent); padding-left: 0; }
     @media (max-width: 600px) { body { padding: 22px 14px 40px; } .toolbar { align-items: flex-start; flex-direction: column; } }
   </style>
+  <link rel="stylesheet" href="../assets/style.css">
 </head>
-<body>
-  <a class="back" href="../index.html">← All tools</a>
-  <h1>SQL to ER Diagram</h1>
-  <p>Paste SQL <code>CREATE TABLE</code> statements, then generate a Mermaid ER diagram.</p>
-  <label for="sql"><strong>SQL schema</strong></label>
+<body class="tool-page">
+  <nav class="tool-top-nav" aria-label="Site navigation" data-i18n-aria="Site navigation">
+    <a class="back" href="../index.html" data-i18n="← All tools">← All tools</a>
+    <a class="brand" href="../index.html">Dev Toolbox</a>
+    <select class="language-select" aria-label="Language" data-i18n-aria="Language"><option value="en">EN</option><option value="th">ไทย</option><option value="zh-CN">中文</option></select>
+    <button class="theme-button" type="button" aria-label="Theme: System" data-i18n-aria="Theme"><span class="theme-icon" aria-hidden="true">◐</span><span class="theme-label" data-i18n="System">System</span></button>
+  </nav>
+  <h1 data-i18n="SQL to ER Diagram">SQL to ER Diagram</h1>
+  <p data-i18n="SQL to ER Diagram intro">Paste SQL <code>CREATE TABLE</code> statements, then generate a Mermaid ER diagram.</p>
+  <label for="sql"><strong data-i18n="SQL schema">SQL schema</strong></label>
   <textarea id="sql" spellcheck="false">CREATE TABLE customers (
   id INT PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
@@ -60,37 +68,35 @@ CREATE TABLE order_items (
   FOREIGN KEY (order_id) REFERENCES orders(id)
 );</textarea>
   <div class="options">
-    <label class="option" for="diagram-style">Diagram style
+    <label class="option" for="diagram-style"><span data-i18n="Diagram style">Diagram style</span>
       <select id="diagram-style">
-        <option value="er">Crow's foot (standard ER)</option>
-        <option value="simple">Simple (1 and *)</option>
+        <option value="er" data-i18n="Crow's foot (standard ER)">Crow's foot (standard ER)</option>
+        <option value="simple" data-i18n="Simple (1 and *)">Simple (1 and *)</option>
       </select>
     </label>
-    <label class="option" for="layout">Layout
+    <label class="option" for="layout"><span data-i18n="Layout">Layout</span>
       <select id="layout">
-        <option value="TB">Top-to-bottom</option>
-        <option value="LR">Left-to-right</option>
+        <option value="TB" data-i18n="Top-to-bottom">Top-to-bottom</option>
+        <option value="LR" data-i18n="Left-to-right">Left-to-right</option>
       </select>
     </label>
-    <label class="check-option"><input id="compact" type="checkbox"> Compact</label>
+    <label class="check-option"><input id="compact" type="checkbox"> <span data-i18n="Compact">Compact</span></label>
   </div>
   <div class="actions">
-    <button id="generate">Generate</button>
-    <button id="load-sample" class="secondary">Load sample</button>
-    <button id="copy" class="secondary" disabled>Copy Mermaid code</button>
-    <button id="download" class="secondary" disabled>Download SVG</button>
+    <button id="generate" data-i18n="Generate">Generate</button>
+    <button id="load-sample" class="secondary" data-i18n="Load sample">Load sample</button>
+    <button id="copy" class="secondary" disabled data-i18n="Copy Mermaid code">Copy Mermaid code</button>
+    <button id="download" class="secondary" disabled data-i18n="Download SVG">Download SVG</button>
   </div>
   <div id="message" class="message" role="status" aria-live="polite"></div>
-  <div class="toolbar"><h2>Diagram</h2></div>
-  <div id="diagram" class="panel" aria-label="Generated ER diagram">Your diagram will appear here.</div>
+  <div class="toolbar"><h2 data-i18n="Diagram heading">Diagram</h2></div>
+  <div id="diagram" class="panel" aria-label="Generated ER diagram" data-i18n-aria="Generated ER diagram" data-i18n="Your diagram will appear here.">Your diagram will appear here.</div>
   <p id="legend" class="legend">PK = primary key · FK = foreign key · || = one · o{ = zero or many</p>
   <section class="code">
-    <h2>Mermaid code</h2>
-    <pre id="mermaid-code">Generate a diagram to see its Mermaid code.</pre>
+    <h2 data-i18n="Mermaid code">Mermaid code</h2>
+    <pre id="mermaid-code" data-i18n="Generate a diagram to see its Mermaid code.">Generate a diagram to see its Mermaid code.</pre>
   </section>
   <script>
-    mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: 'neutral', themeVariables: { fontSize: '18px' }, suppressErrorRendering: true });
-
     const sqlInput = document.getElementById('sql');
     const message = document.getElementById('message');
     const diagram = document.getElementById('diagram');
@@ -253,9 +259,9 @@ CREATE TABLE order_items (
           ? `    ${fk.to} "1" <-- "*" ${fk.from} : ${label}`
           : `    ${fk.to} ||--o{ ${fk.from} : "${label}"`);
       }
-      legend.textContent = simple
-        ? 'PK = primary key · FK = foreign key · 1 = one referenced row · * = many rows holding the foreign key'
-        : 'PK = primary key · FK = foreign key · || = one · o{ = zero or many';
+      legend.textContent = t(simple
+        ? 'PK = primary key · FK = foreign key · 1 = one · * = many'
+        : 'PK = primary key · FK = foreign key · || = one · o{ = zero or many');
       return lines.join('\n');
     }
 
@@ -279,7 +285,7 @@ CREATE TABLE order_items (
       } catch (error) {
         currentSvg = currentCode = '';
         diagram.replaceChildren();
-        codeOutput.textContent = 'No Mermaid code available.';
+        codeOutput.textContent = t('No Mermaid code available.');
         message.textContent = rendering
           ? 'The diagram could not be rendered. Check the SQL types and try again.'
           : error.message || 'Something went wrong while parsing the SQL. Please check the statements and try again.';
@@ -295,10 +301,10 @@ CREATE TABLE order_items (
     copyButton.addEventListener('click', async () => {
       try {
         await navigator.clipboard.writeText(currentCode);
-        message.textContent = 'Mermaid code copied to the clipboard.';
+        message.textContent = t('Mermaid code copied to the clipboard.');
         message.className = 'message success';
       } catch {
-        message.textContent = 'Clipboard access was blocked. Select and copy the Mermaid code below.';
+        message.textContent = t('Clipboard access was blocked. Select and copy the Mermaid code below.');
         message.className = 'message';
       }
     });
@@ -312,6 +318,39 @@ CREATE TABLE order_items (
       link.click();
       URL.revokeObjectURL(url);
     });
+
+    function resolvedMermaidTheme() {
+      const choice = document.documentElement.getAttribute('data-theme') || 'system';
+      return choice === 'dark' || (choice === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'neutral';
+    }
+    let renderSequence = 0;
+    mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: resolvedMermaidTheme(), themeVariables: { fontSize: '18px' }, suppressErrorRendering: true });
+    window.addEventListener('toolbox-theme-change', async event => {
+      mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', theme: event.detail.resolvedTheme === 'dark' ? 'dark' : 'neutral', themeVariables: { fontSize: '18px' }, suppressErrorRendering: true });
+      if (!currentCode) return;
+      try {
+        const result = await mermaid.render(`erDiagramSvg-${++renderSequence}`, currentCode);
+        currentSvg = result.svg;
+        diagram.innerHTML = currentSvg;
+      } catch (error) {
+        diagram.replaceChildren();
+        message.textContent = error.message || 'The diagram could not be redrawn for this theme.';
+      }
+    });
+
+    (function(){
+      const root=document.documentElement,button=document.querySelector('.theme-button');
+      const icon=button.querySelector('.theme-icon'),label=button.querySelector('.theme-label');
+      const order=['system','light','dark'],media=window.matchMedia('(prefers-color-scheme: dark)');
+      let preference=root.getAttribute('data-theme')||'system';
+      function resolved(){return preference==='system'?(media.matches?'dark':'light'):preference;}
+      function refresh(){const next=order[(order.indexOf(preference)+1)%order.length];label.textContent=preference[0].toUpperCase()+preference.slice(1);icon.textContent=resolved()==='dark'?'☾':'☀';button.setAttribute('aria-label',`Theme: ${preference}. Activate to switch to ${next}.`);button.title=`Current theme: ${preference}`;}
+      function apply(value,save){preference=value;root.setAttribute('data-theme',value);if(save){try{localStorage.setItem('dev-toolbox-theme',value);}catch(e){}}refresh();window.dispatchEvent(new CustomEvent('toolbox-theme-change',{detail:{preference,resolvedTheme:resolved()}}));}
+      button.addEventListener('click',()=>apply(order[(order.indexOf(preference)+1)%order.length],true));
+      if(media.addEventListener)media.addEventListener('change',()=>{if(preference==='system'){refresh();window.dispatchEvent(new CustomEvent('toolbox-theme-change',{detail:{preference,resolvedTheme:resolved()}}));}});
+      else if(media.addListener)media.addListener(()=>{if(preference==='system'){refresh();window.dispatchEvent(new CustomEvent('toolbox-theme-change',{detail:{preference,resolvedTheme:resolved()}}));}});
+      refresh();
+    }());
   </script>
 </body>
 </html>

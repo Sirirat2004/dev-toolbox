@@ -3,47 +3,55 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>UX Checker</title>
+  <script>(function(){var theme='system';try{var saved=localStorage.getItem('dev-toolbox-theme');if(saved==='light'||saved==='dark'||saved==='system')theme=saved;}catch(e){}document.documentElement.setAttribute('data-theme',theme);var lang='en';try{var l=localStorage.getItem('dev-toolbox-language');if(l==='th'||l==='zh-CN')lang=l;else if(!l){var b=(navigator.language||'').toLowerCase();lang=b.indexOf('th')===0?'th':b.indexOf('zh')===0?'zh-CN':'en';}}catch(e){}document.documentElement.lang=lang;}());</script>
+  <script defer src="../assets/i18n.js"></script>
+  <title data-i18n="UX Checker">UX Checker</title>
   <style>
-    :root { color-scheme: light; font-family: system-ui, sans-serif; color: #172033; background: #f4f6fa; }
+    :root { font-family: var(--font-stack); }
     * { box-sizing: border-box; }
     body { max-width: 1100px; margin: 0 auto; padding: 32px 20px 56px; }
     h1 { margin: 0 0 8px; font-size: 1.8rem; }
-    p { color: #596579; }
-    .back { display: inline-block; margin-bottom: 20px; color: #2457d6; text-decoration: none; }
+    p { color: var(--muted-text); }
+    .back { display: inline-block; margin-bottom: 20px; color: var(--accent); text-decoration: none; }
     .tabs, .actions, .filters { display: flex; flex-wrap: wrap; gap: 9px; margin: 16px 0 10px; }
-    button { border: 0; border-radius: 8px; padding: 10px 14px; background: #2457d6; color: white; font: inherit; font-weight: 600; cursor: pointer; }
-    button.secondary, .tabs button, .filters button { background: #e5eaf3; color: #25324a; }
-    .tabs button[aria-selected="true"], .filters button[aria-pressed="true"] { background: #d7e2ff; color: #183e9e; }
+    button { border: 1px solid transparent; border-radius: 10px; padding: 10px 14px; background: var(--primary-button-bg); color: var(--primary-button-text); font: inherit; font-weight: 600; cursor: pointer; }
+    button.secondary, .tabs button, .filters button { border: 1px solid var(--border); background: var(--secondary-button-bg); color: var(--secondary-button-text); }
+    .tabs button[aria-selected="true"], .filters button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
     .editor-panel[hidden] { display: none; }
-    textarea { display: block; width: 100%; min-height: 250px; padding: 15px; border: 1px solid #cbd3df; border-radius: 10px; background: white; color: #172033; font: 14px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; resize: vertical; }
+    textarea { display: block; width: 100%; min-height: 250px; padding: 15px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); font: 14px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; resize: vertical; }
     .optional { margin-top: 16px; }
     .optional textarea { min-height: 74px; }
     .actions { margin: 14px 0; }
-    .status { min-height: 24px; margin: 12px 0; color: #596579; }
-    .summary { margin: 18px 0 10px; padding: 12px 15px; border-radius: 8px; background: white; font-weight: 600; }
+    .status { min-height: 24px; margin: 12px 0; color: var(--muted-text); }
+    .summary { margin: 18px 0 10px; padding: 12px 15px; border: 1px solid var(--border); border-radius: 18px; background: var(--surface); color: var(--text); font-weight: 600; }
     .preview-wrap { overflow: auto; padding: 2px 0; }
-    iframe { display: block; width: 375px; min-height: 420px; margin: 0; border: 1px solid #cbd3df; border-radius: 10px; background: white; }
+    iframe { display: block; width: 375px; min-height: 420px; margin: 0; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
     iframe[hidden] { display: none; }
     .results { display: grid; gap: 14px; }
     .category-group { display: grid; gap: 8px; }
     .category-group h3 { margin: 10px 0 0; font-size: 1.05rem; }
-    .finding { padding: 12px 14px; border-left: 4px solid #d97706; border-radius: 7px; background: white; }
-    .finding.error { border-color: #c62828; }
-    .finding.passed { border-color: #17804e; }
+    .finding { padding: 12px 14px; border: 1px solid var(--border); border-left: 4px solid var(--warning); border-radius: 16px; background: var(--surface); color: var(--text); }
+    .finding.error { border-color: var(--error); }
+    .finding.passed { border-color: var(--success); }
     .finding-title { font-weight: 700; }
     .finding p { margin: 5px 0 8px; }
     .finding button { padding: 7px 10px; font-size: .9rem; }
-    .empty { color: #596579; padding: 14px; background: white; border-radius: 8px; }
+    .empty { color: var(--muted-text); padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
     @media (max-width: 600px) { body { padding: 22px 14px 40px; } }
   </style>
+  <link rel="stylesheet" href="../assets/style.css">
 </head>
-<body>
-  <a class="back" href="../index.html">← All tools</a>
-  <h1>UX Checker</h1>
-  <p>Preview a page at three widths and review layout, readability, touch targets, content and forms.</p>
+<body class="tool-page">
+  <nav class="tool-top-nav" aria-label="Site navigation" data-i18n-aria="Site navigation">
+    <a class="back" href="../index.html" data-i18n="← All tools">← All tools</a>
+    <a class="brand" href="../index.html">Dev Toolbox</a>
+    <select class="language-select" aria-label="Language" data-i18n-aria="Language"><option value="en">EN</option><option value="th">ไทย</option><option value="zh-CN">中文</option></select>
+    <button class="theme-button" type="button" aria-label="Theme: System" data-i18n-aria="Theme"><span class="theme-icon" aria-hidden="true">◐</span><span class="theme-label" data-i18n="System">System</span></button>
+  </nav>
+  <h1 data-i18n="UX Checker">UX Checker</h1>
+  <p data-i18n="UX Checker intro">Preview a page at three widths and review layout, readability, touch targets, content and forms.</p>
 
-  <div class="tabs" role="tablist" aria-label="Code type">
+  <div class="tabs" role="tablist" aria-label="Code type" data-i18n-aria="Code type">
     <button type="button" role="tab" id="tab-html" aria-selected="true" aria-controls="panel-html">HTML</button>
     <button type="button" role="tab" id="tab-css" aria-selected="false" aria-controls="panel-css">CSS</button>
     <button type="button" role="tab" id="tab-js" aria-selected="false" aria-controls="panel-js">JavaScript</button>
@@ -79,22 +87,22 @@ h1 { font-size: 20px; }</textarea>
   </section>
 
   <div class="optional">
-    <label for="features"><strong>Required features</strong> <span>(optional, one per line)</span></label>
+    <label for="features"><strong data-i18n="Required features">Required features</strong> <span data-i18n="optional, one per line">(optional, one per line)</span></label>
     <textarea id="features" placeholder="login button&#10;search box&#10;contact form"></textarea>
   </div>
   <div class="optional">
-    <label for="palette"><strong>Brand palette</strong> <span>(optional, hex colors one per line)</span></label>
+    <label for="palette"><strong data-i18n="Brand palette">Brand palette</strong> <span data-i18n="optional, hex colors one per line">(optional, hex colors one per line)</span></label>
     <textarea id="palette" placeholder="#2457d6&#10;#172033&#10;#ffffff"></textarea>
   </div>
 
   <div class="actions">
-    <button id="run">Run UX checks</button>
-    <button id="copy" class="secondary">Copy report</button>
+    <button id="run" data-i18n="Run UX checks">Run UX checks</button>
+    <button id="copy" class="secondary" data-i18n="Copy report">Copy report</button>
   </div>
   <div id="status" class="status" role="status" aria-live="polite"></div>
   <div id="summary" class="summary">Run the UX checks to see a summary.</div>
-  <div id="filters" class="filters" aria-label="Filter results by category"></div>
-  <div class="preview-wrap"><iframe id="preview" title="Sandboxed page preview" sandbox="allow-scripts" hidden></iframe></div>
+  <div id="filters" class="filters" aria-label="Filter results by category" data-i18n-aria="Filter results by category"></div>
+  <div class="preview-wrap"><iframe id="preview" title="Sandboxed page preview" data-i18n-aria="Sandboxed page preview" sandbox="allow-scripts" hidden></iframe></div>
   <div id="results" class="results" aria-live="polite"></div>
 
   <script>
@@ -393,7 +401,7 @@ h1 { font-size: 20px; }</textarea>
       const measureScript = '<' + 'script>window.__brandPalette=' + JSON.stringify(palette) + ';window.__requiredFeatures=' + JSON.stringify(features) + ';window.__uxCheckerMeasure=' + uxMeasure.toString() + ';<' + '/script>';
       const cssBlock = '<style>' + escapeStyle(cssInput.value) + '</style>';
       const viewport = '<meta name="viewport" content="width=device-width, initial-scale=1">';
-      const capture = '<' + 'script>(function(){function send(data){parent.postMessage(Object.assign({__uxChecker:true},data),"*");}addEventListener("error",function(e){if(e.message)send({kind:"runtime",message:e.message,line:e.lineno||1,column:e.colno||null});},true);addEventListener("unhandledrejection",function(e){send({kind:"runtime",message:String(e.reason&&e.reason.message||e.reason||"Unhandled promise rejection"),line:1});});addEventListener("message",function(e){if(e.source!==parent||!e.data||e.data.__uxChecker!==true)return;if(e.data.kind==="measure"){try{send({kind:"measurement",result:window.__uxMeasureNow(e.data.width)});}catch(error){send({kind:"measure-error",message:error.message||String(error)});}}if(e.data.kind==="highlight"){document.querySelectorAll("[data-ux-check-id]").forEach(function(el){el.style.outline="";el.style.outlineOffset="";});var targets=e.data.targetIds||[];targets.forEach(function(id){var el=document.querySelector("[data-ux-check-id=\\\""+id+"\\\"]");if(el){el.style.outline="3px solid #f59e0b";el.style.outlineOffset="2px";el.scrollIntoView({block:"center",inline:"nearest"});}});}});window.__uxMeasureNow=function(){return window.__uxCheckerMeasure.apply(null,arguments);};})();<' + '/script>';
+      const capture = '<' + 'script>(function(){function send(data){parent.postMessage(Object.assign({__uxChecker:true},data),"*");}addEventListener("error",function(e){if(e.message)send({kind:"runtime",message:e.message,line:e.lineno||1,column:e.colno||null});},true);addEventListener("unhandledrejection",function(e){send({kind:"runtime",message:String(e.reason&&e.reason.message||e.reason||"Unhandled promise rejection"),line:1});});addEventListener("message",function(e){if(e.source!==parent||!e.data||e.data.__uxChecker!==true)return;if(e.data.kind==="measure"){try{send({kind:"measurement",result:window.__uxMeasureNow(e.data.width)});}catch(error){send({kind:"measure-error",message:error.message||String(error)});}}if(e.data.kind==="highlight"){document.querySelectorAll("[data-ux-check-id]").forEach(function(el){el.style.outline="";el.style.outlineOffset="";});var targets=e.data.targetIds||[];targets.forEach(function(id){var el=document.querySelector("[data-ux-check-id=\\\""+id+"\\\"]");if(el){el.style.outline="3px solid "+e.data.color;el.style.outlineOffset="2px";el.scrollIntoView({block:"center",inline:"nearest"});}});}});window.__uxMeasureNow=function(){return window.__uxCheckerMeasure.apply(null,arguments);};})();<' + '/script>';
       let html = htmlInput.value;
       const userScript = jsInput.value.trim() ? '<' + 'script>' + escapeUserScript(jsInput.value) + '<' + '/script>' : '';
       if (/<html\b/i.test(html)) {
@@ -440,7 +448,7 @@ h1 { font-size: 20px; }</textarea>
       resultsEl.replaceChildren();
       const shown = ordered.filter(item => activeFilter === 'All' || item.category === activeFilter);
       if (!shown.length) {
-        const empty = document.createElement('div'); empty.className = 'empty'; empty.textContent = 'No results in this category.'; resultsEl.append(empty); return;
+        const empty = document.createElement('div'); empty.className = 'empty'; empty.textContent = t('No results in this category.'); resultsEl.append(empty); return;
       }
       const categoryOrder = [...new Set(shown.map(item => item.category))].sort((a, b) => {
         const ar = Math.min(...shown.filter(item => item.category === a).map(item => rank[item.severity]));
@@ -458,8 +466,8 @@ h1 { font-size: 20px; }</textarea>
           measured.textContent = perWidth;
           if (item.severity !== 'passed' && item.widths.length < widths.length) measured.textContent += ` · Responsive: seen only at ${item.widths.map(width => `${width}px`).join(', ')}.`;
           const fix = document.createElement('p'); fix.textContent = item.fix ? `Suggested fix: ${item.fix}` : 'Check passed.';
-          const highlight = document.createElement('button'); highlight.type = 'button'; highlight.className = 'secondary'; highlight.textContent = 'Highlight'; highlight.disabled = !item.targetIds.length;
-          highlight.addEventListener('click', () => preview.contentWindow.postMessage({ __uxChecker: true, kind: 'highlight', targetIds: item.targetIds }, '*'));
+          const highlight = document.createElement('button'); highlight.type = 'button'; highlight.className = 'secondary'; highlight.textContent = t('Highlight'); highlight.disabled = !item.targetIds.length;
+          highlight.addEventListener('click', () => preview.contentWindow.postMessage({ __uxChecker: true, kind: 'highlight', targetIds: item.targetIds, color: getComputedStyle(document.documentElement).getPropertyValue('--highlight').trim() }, '*'));
           card.append(title, measured, fix, highlight); section.append(card);
         }
         resultsEl.append(section);
@@ -481,10 +489,10 @@ h1 { font-size: 20px; }</textarea>
 
     document.getElementById('run').addEventListener('click', async () => {
       if (!htmlInput.value.trim() && !cssInput.value.trim() && !jsInput.value.trim()) {
-        status.textContent = 'Paste some HTML, CSS or JavaScript first, then run the UX checks.';
+        status.textContent = t('Paste some HTML, CSS or JavaScript first, then run the UX checks.');
         return;
       }
-      status.textContent = 'Rendering the page in a sandbox and measuring three widths…';
+      status.textContent = t('Rendering the page in a sandbox and measuring three widths…');
       findings = []; activeFilter = 'All'; preview.hidden = false;
       preview.style.width = `${widths[0]}px`;
       try {
@@ -505,7 +513,7 @@ h1 { font-size: 20px; }</textarea>
         }
         preview.style.width = '100%';
         renderResults();
-        status.textContent = 'UX checks complete. Use Highlight on a result to locate its element in the preview.';
+        status.textContent = t('UX checks complete. Use Highlight on a result to locate its element in the preview.');
       } catch (error) {
         preview.style.width = '100%';
         status.textContent = error.message || 'The UX checks could not finish. Please check the pasted code and try again.';
@@ -515,8 +523,8 @@ h1 { font-size: 20px; }</textarea>
     document.getElementById('copy').addEventListener('click', async () => {
       const reportText = findings.length ? findings.map(item => `${item.severity.toUpperCase()} [${item.category}] ${item.rule} — ${item.element}\n${item.widths.length ? item.widths.map(width => `${width}px: ${item.measurementsByWidth[width]}`).join('\n') : item.measurements || 'No measurement value.'}\nSuggested fix: ${item.fix || 'Passed.'}`).join('\n\n') : 'No UX report yet.';
       const text = `UX CHECK REPORT\n\n${summary.textContent}\n\n${reportText}\n\n===== HTML =====\n${htmlInput.value}\n\n===== CSS =====\n${cssInput.value}\n\n===== JAVASCRIPT =====\n${jsInput.value}\n\n===== REQUIRED FEATURES =====\n${featureInput.value}\n\n===== BRAND PALETTE =====\n${paletteInput.value}`;
-      try { await navigator.clipboard.writeText(text); status.textContent = 'Report and pasted code copied to the clipboard.'; }
-      catch { status.textContent = 'Clipboard access was blocked. Please copy the report and code manually.'; }
+      try { await navigator.clipboard.writeText(text); status.textContent = t('Report and pasted code copied to the clipboard.'); }
+      catch { status.textContent = t('Clipboard access was blocked. Please copy the report and code manually.'); }
     });
 
     window.addEventListener('message', event => {
@@ -535,6 +543,20 @@ h1 { font-size: 20px; }</textarea>
       document.querySelectorAll('[role="tab"]').forEach(item => item.setAttribute('aria-selected', String(item === tab)));
       document.querySelectorAll('[role="tabpanel"]').forEach(panel => { panel.hidden = panel.id !== tab.getAttribute('aria-controls'); });
     }));
+
+    (function(){
+      const root=document.documentElement,button=document.querySelector('.theme-button');
+      const icon=button.querySelector('.theme-icon'),label=button.querySelector('.theme-label');
+      const order=['system','light','dark'],media=window.matchMedia('(prefers-color-scheme: dark)');
+      let preference=root.getAttribute('data-theme')||'system';
+      function resolved(){return preference==='system'?(media.matches?'dark':'light'):preference;}
+      function refresh(){const next=order[(order.indexOf(preference)+1)%order.length];label.textContent=preference[0].toUpperCase()+preference.slice(1);icon.textContent=resolved()==='dark'?'☾':'☀';button.setAttribute('aria-label',`Theme: ${preference}. Activate to switch to ${next}.`);button.title=`Current theme: ${preference}`;}
+      function apply(value,save){preference=value;root.setAttribute('data-theme',value);if(save){try{localStorage.setItem('dev-toolbox-theme',value);}catch(e){}}refresh();window.dispatchEvent(new CustomEvent('toolbox-theme-change',{detail:{preference,resolvedTheme:resolved()}}));}
+      button.addEventListener('click',()=>apply(order[(order.indexOf(preference)+1)%order.length],true));
+      if(media.addEventListener)media.addEventListener('change',()=>{if(preference==='system'){refresh();window.dispatchEvent(new CustomEvent('toolbox-theme-change',{detail:{preference,resolvedTheme:resolved()}}));}});
+      else if(media.addListener)media.addListener(()=>{if(preference==='system'){refresh();window.dispatchEvent(new CustomEvent('toolbox-theme-change',{detail:{preference,resolvedTheme:resolved()}}));}});
+      refresh();
+    }());
   </script>
 </body>
 </html>
