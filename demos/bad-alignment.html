@@ -1,0 +1,37 @@
+<!doctype html>
+<!-- Intentional problems: card columns are offset by 2–6px, gaps vary, and a promo badge overlaps the intro copy. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Harbor Market | Weekly picks</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#f6f7fb;color:#172033;font:16px/1.5 system-ui,sans-serif}
+    header{padding:22px max(22px,calc((100% - 1040px)/2));background:#fff;display:flex;justify-content:space-between;align-items:center}
+    .brand{font-weight:800;font-size:20px}nav{display:flex;gap:22px}a{color:#263b64;text-decoration:none}
+    main{max-width:1040px;margin:36px auto;padding:0 20px}.intro{position:relative;margin-bottom:34px}
+    h1{font-size:38px;margin:0 0 8px}.intro p{max-width:590px;margin:0;color:#526078}
+    .promo{position:absolute;left:500px;top:40px;background:#fce5b9;padding:8px 12px;border-radius:20px;font-weight:700}
+    .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:19px;row-gap:26px;align-items:start}
+    .card{background:#fff;border:1px solid #dce1eb;border-radius:16px;padding:22px;min-height:220px}
+    .card:nth-child(2){transform:translate(3px,2px)}.card:nth-child(3){transform:translate(-2px,6px)}
+    .card:nth-child(2n){margin-bottom:7px}.card h2{margin:0 0 8px;font-size:21px}.price{font-size:24px;font-weight:800}
+    button{padding:10px 16px;border:0;border-radius:9px;background:#273b61;color:#fff;font:inherit}
+    footer{margin-top:42px;padding:24px;text-align:center;color:#667085}
+    @media(max-width:700px){.cards{grid-template-columns:1fr}header{padding:16px 20px}nav{gap:10px}main{margin-top:24px}.promo{left:auto;right:5px;top:68px}}
+  </style>
+</head>
+<body>
+  <header><div class="brand">Harbor Market</div><nav><a href="#collections">Collections</a><a href="#story">Our story</a></nav><button>Shop picks</button></header>
+  <main>
+    <section class="intro"><h1>Thoughtful goods for everyday living</h1><p>Find useful objects, pantry favorites and small gifts chosen for the way you live.</p><span class="promo">Fresh this week</span></section>
+    <section id="collections" class="cards">
+      <article class="card"><h2>Kitchen &amp; table</h2><p>Durable pieces for slow breakfasts and busy weeknights.</p><p class="price">From $18</p><button>Explore kitchen</button></article>
+      <article class="card"><h2>Pantry staples</h2><p>Small-batch sauces, teas and snacks from independent makers.</p><p class="price">From $8</p><button>Browse pantry</button></article>
+      <article class="card"><h2>Gifts under $40</h2><p>Useful little things that are easy to give and lovely to keep.</p><p class="price">Curated weekly</p><button>Find a gift</button></article>
+    </section>
+    <section id="story"><h2>Picked with care</h2><p>Every item is selected for quality, usefulness and a long life at home.</p></section>
+  </main>
+  <footer>Thoughtful finds, delivered with care.</footer>
+</body>
+</html>

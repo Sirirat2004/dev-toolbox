@@ -1,0 +1,27 @@
+<!doctype html>
+<!-- Intentional problems: pale gray body text and button labels on white, plus undersized helper text. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Northfield Pantry | Seasonal boxes</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#fff;color:#c7cbd2;font:14px/1.5 system-ui,sans-serif}
+    header{padding:20px max(20px,calc((100% - 960px)/2));border-bottom:1px solid #f1f2f4;display:flex;justify-content:space-between}
+    .brand{font-size:20px;font-weight:750;color:#c7cbd2}nav{display:flex;gap:20px}a{color:#c4c9d0}
+    main{max-width:960px;margin:54px auto;padding:0 22px}.eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#d6d9de}
+    h1{max-width:650px;color:#d2d5da;font-size:42px;line-height:1.08}.copy{max-width:620px;color:#c5c9d0;font-size:17px}
+    .box{margin-top:30px;padding:26px;border:1px solid #f0f1f3;border-radius:14px}.box p{font-size:11px;color:#d0d3d8}
+    button{border:1px solid #eeeeef;border-radius:7px;background:#f0f1f2;color:#d5d8dc;padding:8px 12px;font-size:12px}
+    .fine{font-size:9px;color:#d9dce0}
+  </style>
+</head>
+<body>
+  <header><div class="brand">Northfield Pantry</div><nav><a href="#boxes">Seasonal boxes</a><a href="#about">About</a></nav></header>
+  <main><p class="eyebrow">A little goodness for the week</p><h1>Seasonal pantry boxes, packed with care</h1>
+    <p class="copy">A fresh mix of local preserves, everyday staples and something new to try. Delivered to your door once a month.</p>
+    <button>Choose a box</button><section id="boxes" class="box"><h2>Spring table box</h2><p>Six pantry favorites for brighter lunches and easy dinners.</p><p class="fine">Ships on the first Monday of each month. Cancel any time.</p><button>See what's inside</button></section>
+    <section id="about"><h2>Good food, simply shared</h2><p>We work with small producers to bring dependable favorites to your kitchen.</p></section>
+  </main>
+</body>
+</html>

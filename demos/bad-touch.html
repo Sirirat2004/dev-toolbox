@@ -1,0 +1,26 @@
+<!doctype html>
+<!-- Intentional problems: tiny controls are crowded together, and icon-only buttons have no accessible names. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Field Notes | Weekend journal</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;color:#202b3c;font:16px/1.5 system-ui,sans-serif;background:#f7f8fa}
+    header{background:#fff;padding:20px max(20px,calc((100% - 920px)/2));display:flex;align-items:center;gap:12px}
+    .brand{font-weight:800;font-size:22px;margin-right:auto}main{max-width:920px;margin:45px auto;padding:0 20px}
+    .story{background:#fff;border-radius:16px;padding:30px}.actions{display:flex;align-items:center;gap:3px;margin-top:20px}
+    button,a.action{font:inherit;font-size:11px;padding:3px 5px;min-width:0;min-height:0;border:1px solid #cbd2de;border-radius:4px;background:#fff;color:#24344e;text-decoration:none}
+    .icon{width:24px;height:22px;padding:2px;text-align:center}.share{display:flex;gap:2px}.caption{color:#68758a}
+    .search::before{content:"⌕"}.favorite::before{content:"♡"}.menuicon::before{content:"☰"}.open::before{content:"↗"}.more::before{content:"⋯"}
+  </style>
+</head>
+<body>
+  <header><div class="brand">Weekend Journal</div><button class="icon search"></button><button class="icon favorite"></button><button class="icon menuicon"></button></header>
+  <main><article class="story"><p class="caption">WEEKEND JOURNAL · 6 MIN READ</p><h1>A slower Saturday by the water</h1>
+    <p>Pack a simple lunch, follow the path past the old pier, and take the afternoon at your own pace.</p>
+    <div class="actions"><a class="action" href="#save">Save story</a><a class="action" href="#share">Share</a><button class="icon open"></button><button class="icon more"></button></div>
+    <div class="share"><a href="#copy">Copy link</a><a href="#email">Email</a><a href="#print">Print</a></div>
+  </article></main>
+</body>
+</html>

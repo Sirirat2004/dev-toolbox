@@ -17,6 +17,7 @@
     button { border: 1px solid transparent; border-radius: 10px; padding: 10px 14px; background: var(--primary-button-bg); color: var(--primary-button-text); font: inherit; font-weight: 600; cursor: pointer; }
     button.secondary, .tabs button, .filters button { border: 1px solid var(--border); background: var(--secondary-button-bg); color: var(--secondary-button-text); }
     .tabs button[aria-selected="true"], .filters button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
+    .mode-switcher .mode-button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
     .editor-panel[hidden] { display: none; }
     textarea { display: block; width: 100%; min-height: 250px; padding: 15px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); font: 14px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; resize: vertical; }
     .optional { margin-top: 16px; }
@@ -27,6 +28,15 @@
     .preview-wrap { overflow: auto; padding: 2px 0; }
     iframe { display: block; width: 375px; min-height: 420px; margin: 0; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
     iframe[hidden] { display: none; }
+    .demo-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; margin: 12px 0; }
+    .demo-controls label { width: 100%; font-weight: 650; }
+    .demo-controls select { width: auto; min-width: min(100%, 260px); }
+    .demo-preview-wrap { margin-top: 16px; }
+    #demo-preview { height: 680px; }
+    .compare-frame { position: fixed; left: -10000px; top: 0; width: 375px; height: 700px; visibility: hidden; pointer-events: none; }
+    .demo-comparison { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
+    .comparison-card { min-width: 150px; padding: 12px 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--text); }
+    .comparison-card strong { display: block; font-size: 1.05rem; }
     .results { display: grid; gap: 14px; }
     .category-group { display: grid; gap: 8px; }
     .category-group h3 { margin: 10px 0 0; font-size: 1.05rem; }
@@ -36,6 +46,8 @@
     .finding-title { font-weight: 700; }
     .finding p { margin: 5px 0 8px; }
     .finding button { padding: 7px 10px; font-size: .9rem; }
+    .finding.demo-clickable { cursor: pointer; }
+    .finding.demo-clickable:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
     .empty { color: var(--muted-text); padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
     @media (max-width: 600px) { body { padding: 22px 14px 40px; } }
   </style>
@@ -53,6 +65,11 @@
   <h1 data-i18n="UI/UX Checker">UI/UX Checker</h1>
   <p data-i18n="UI/UX Checker intro">Preview a page at three widths and review layout, readability, touch targets, content and forms.</p>
 
+  <div class="mode-switcher tabs" role="group" aria-label="Check mode" data-i18n-aria="Check mode">
+    <button class="mode-button" type="button" aria-pressed="true" data-mode="paste" data-i18n="Paste code">Paste code</button>
+    <button class="mode-button" type="button" aria-pressed="false" data-mode="demo" data-i18n="Demo / same-site page">Demo / same-site page</button>
+  </div>
+  <section id="paste-mode">
   <div class="tabs" role="tablist" aria-label="Code type" data-i18n-aria="Code type">
     <button type="button" role="tab" id="tab-html" aria-selected="true" aria-controls="panel-html">HTML</button>
     <button type="button" role="tab" id="tab-css" aria-selected="false" aria-controls="panel-css">CSS</button>
@@ -101,11 +118,42 @@ h1 { font-size: 20px; }</textarea>
     <button id="run" data-i18n="Run UX checks">Run UX checks</button>
     <button id="copy" class="secondary" data-i18n="Copy report">Copy report</button>
   </div>
+  </section>
+  <section id="demo-mode" hidden>
+    <h2 data-i18n="Demo Lab">Demo Lab</h2>
+    <div class="demo-controls">
+      <label for="demo-page" data-i18n="Choose a page">Choose a page</label>
+      <select id="demo-page">
+        <option value="" disabled selected data-i18n="Demo pages">Demo pages</option>
+        <option value="alignment" data-i18n="Demo: uneven alignment">Demo: uneven alignment</option>
+        <option value="contrast" data-i18n="Demo: low contrast">Demo: low contrast</option>
+        <option value="touch" data-i18n="Demo: small touch targets">Demo: small touch targets</option>
+        <option value="mobile" data-i18n="Demo: mobile overflow">Demo: mobile overflow</option>
+        <option value="" disabled data-i18n="Site pages">Site pages</option>
+        <option value="home" data-i18n="Home page">Home page</option>
+        <option value="er" data-i18n="SQL to ER Diagram">SQL to ER Diagram</option>
+        <option value="code" data-i18n="Code Checker">Code Checker</option>
+        <option value="ux" data-i18n="UI/UX Checker">UI/UX Checker</option>
+      </select>
+      <button id="run-demo" type="button" data-i18n="Check demo">Check demo</button>
+      <button id="compare-fixed" class="secondary" type="button" data-i18n="Compare with fixed version">Compare with fixed version</button>
+    </div>
+    <div id="demo-comparison" class="demo-comparison" hidden aria-live="polite"></div>
+    <div class="demo-preview-wrap">
+      <div class="width-switcher" role="group" aria-label="Preview width" data-i18n-aria="Preview width">
+        <button type="button" class="demo-width" data-width="375" aria-pressed="true">375 px</button>
+        <button type="button" class="demo-width" data-width="768" aria-pressed="false">768 px</button>
+        <button type="button" class="demo-width" data-width="1280" aria-pressed="false">1280 px</button>
+      </div>
+      <div class="preview-wrap"><iframe id="demo-preview" title="Live same-site page preview" data-i18n-aria="Live same-site page preview"></iframe></div>
+    </div>
+  </section>
   <div id="status" class="status" role="status" aria-live="polite"></div>
-  <div id="summary" class="summary">Run the UX checks to see a summary.</div>
+  <div id="summary" class="summary" data-i18n="Run the UX checks to see a summary.">Run the UX checks to see a summary.</div>
   <div id="filters" class="filters" aria-label="Filter results by category" data-i18n-aria="Filter results by category"></div>
-  <div class="preview-wrap"><iframe id="preview" title="Sandboxed page preview" data-i18n-aria="Sandboxed page preview" sandbox="allow-scripts" hidden></iframe></div>
+  <section id="paste-preview"><div class="preview-wrap"><iframe id="preview" title="Sandboxed page preview" data-i18n-aria="Sandboxed page preview" sandbox="allow-scripts" hidden></iframe></div></section>
   <div id="results" class="results" aria-live="polite"></div>
+  <iframe id="compare-frame" class="compare-frame" aria-hidden="true" tabindex="-1"></iframe>
 
   <script>
     const htmlInput = document.getElementById('html-code');
@@ -118,9 +166,30 @@ h1 { font-size: 20px; }</textarea>
     const summary = document.getElementById('summary');
     const resultsEl = document.getElementById('results');
     const filtersEl = document.getElementById('filters');
+    const pasteMode = document.getElementById('paste-mode');
+    const demoMode = document.getElementById('demo-mode');
+    const pastePreview = document.getElementById('paste-preview');
+    const demoPreview = document.getElementById('demo-preview');
+    const compareFrame = document.getElementById('compare-frame');
+    const demoSelect = document.getElementById('demo-page');
+    const comparison = document.getElementById('demo-comparison');
     const widths = [375, 768, 1280];
+    const demoPages = Object.freeze({
+      alignment: '../demos/bad-alignment.html',
+      contrast: '../demos/bad-contrast.html',
+      touch: '../demos/bad-touch.html',
+      mobile: '../demos/bad-mobile.html',
+      home: '../index.html',
+      er: '../tools/er-diagram.html',
+      code: '../tools/code-checker.html',
+      ux: '../tools/ux-checker.html',
+      fixed: '../demos/fixed.html'
+    });
     let findings = [];
     let activeFilter = 'All';
+    let currentMode = 'paste';
+    let selectedDemoWidth = 375;
+    let demoHasRun = false;
 
     function uxMeasure() {
       const report = [];
@@ -417,23 +486,26 @@ h1 { font-size: 20px; }</textarea>
       return html;
     }
 
-    function mergeResults(width, incoming) {
+    function mergeInto(collection, width, incoming) {
       for (const item of incoming) {
         const key = [item.category, item.rule, item.element, item.fix].join('|');
-        let existing = findings.find(result => result.key === key);
+        let existing = collection.find(result => result.key === key);
         if (!existing) {
           existing = { ...item, key, widths: [], measurementsByWidth: {} };
-          findings.push(existing);
+          collection.push(existing);
         }
         if (!existing.widths.includes(width)) existing.widths.push(width);
         existing.measurementsByWidth[width] = item.measurements;
         existing.targetIds = item.targetIds.length ? item.targetIds : existing.targetIds;
       }
     }
+    function mergeResults(width, incoming) { mergeInto(findings, width, incoming); }
 
     function renderResults() {
       const rank = { error: 0, warning: 1, passed: 2 };
       const ordered = [...findings].sort((a, b) => rank[a.severity] - rank[b.severity] || a.category.localeCompare(b.category) || a.element.localeCompare(b.element));
+      let demoNumber = 0;
+      for (const item of ordered) item.demoNumber = currentMode === 'demo' && item.severity !== 'passed' && item.targetIds.length ? ++demoNumber : null;
       const counts = { error: 0, warning: 0, passed: 0 };
       for (const item of findings) counts[item.severity]++;
       summary.textContent = `Errors: ${counts.error} · Warnings: ${counts.warning} · Passed: ${counts.passed}`;
@@ -461,20 +533,236 @@ h1 { font-size: 20px; }</textarea>
         const section = document.createElement('section'); section.className = 'category-group';
         const heading = document.createElement('h3'); heading.textContent = category; section.append(heading);
         for (const item of shown.filter(result => result.category === category).sort((a, b) => rank[a.severity] - rank[b.severity])) {
-          const card = document.createElement('article'); card.className = `finding ${item.severity}`;
-          const title = document.createElement('div'); title.className = 'finding-title'; title.textContent = `${item.severity.toUpperCase()} · ${item.rule} · ${item.element}`;
+          const card = document.createElement('article'); card.className = `finding ${item.severity}` + (item.demoNumber ? ' demo-clickable' : '');
+          if (item.demoNumber) { card.tabIndex = 0; card.addEventListener('click', () => focusDemoIssue(item)); card.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); focusDemoIssue(item); } }); }
+          const title = document.createElement('div'); title.className = 'finding-title'; title.textContent = `${item.demoNumber ? '#' + item.demoNumber + ' · ' : ''}${item.severity.toUpperCase()} · ${item.rule} · ${item.element}`;
           const measured = document.createElement('p');
           const perWidth = item.widths.length ? item.widths.map(width => `${width}px: ${item.measurementsByWidth[width]}`).join(' · ') : (item.measurements || 'No measurement value.');
           measured.textContent = perWidth;
           if (item.severity !== 'passed' && item.widths.length < widths.length) measured.textContent += ` · Responsive: seen only at ${item.widths.map(width => `${width}px`).join(', ')}.`;
           const fix = document.createElement('p'); fix.textContent = item.fix ? `Suggested fix: ${item.fix}` : 'Check passed.';
           const highlight = document.createElement('button'); highlight.type = 'button'; highlight.className = 'secondary'; highlight.textContent = t('Highlight'); highlight.disabled = !item.targetIds.length;
-          highlight.addEventListener('click', () => preview.contentWindow.postMessage({ __uxChecker: true, kind: 'highlight', targetIds: item.targetIds, color: getComputedStyle(document.documentElement).getPropertyValue('--highlight').trim() }, '*'));
+          highlight.addEventListener('click', event => {
+            event.stopPropagation();
+            if (currentMode === 'demo') focusDemoIssue(item);
+            else preview.contentWindow.postMessage({ __uxChecker: true, kind: 'highlight', targetIds: item.targetIds, color: getComputedStyle(document.documentElement).getPropertyValue('--highlight').trim() }, '*');
+          });
           card.append(title, measured, fix, highlight); section.append(card);
         }
         resultsEl.append(section);
       }
+      if (currentMode === 'demo') drawDemoMarks();
     }
+
+    function demoInputs() {
+      const palette = paletteInput.value.split(/\r?\n/).map(line => line.trim()).filter(value => /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(value));
+      const features = featureInput.value.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+      return { palette, features };
+    }
+
+    function loadSameSitePage(frame, relativePath) {
+      if (!Object.values(demoPages).includes(relativePath)) return Promise.reject(new Error(t('The selected page is not on the allowlist.')));
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error(t('The selected page did not load.'))), 15000);
+        frame.onload = () => { clearTimeout(timer); resolve(); };
+        frame.onerror = () => { clearTimeout(timer); reject(new Error(t('The selected page could not be loaded.'))); };
+        frame.src = relativePath;
+      });
+    }
+
+    function injectDemoMeasurer(frame) {
+      const doc = frame.contentDocument;
+      if (!doc || !doc.body) throw new Error(t('The selected page is not available on this site.'));
+      const overlay = doc.querySelector('[data-ux-overlay]');
+      if (overlay) overlay.remove();
+      doc.querySelectorAll('[data-ux-check-id]').forEach(element => element.removeAttribute('data-ux-check-id'));
+      const input = demoInputs();
+      const script = doc.createElement('script');
+      script.textContent = 'window.__brandPalette=' + JSON.stringify(input.palette) +
+        ';window.__requiredFeatures=' + JSON.stringify(input.features) +
+        ';window.__uxCheckerMeasure=(' + uxMeasure.toString() + ');' +
+        'window.__uxMeasureNow=function(){return window.__uxCheckerMeasure.apply(null,arguments);};';
+      (doc.head || doc.body).appendChild(script);
+      script.remove();
+    }
+
+    async function measureDemoFrame(frame, width) {
+      const doc = frame.contentDocument;
+      if (!doc) throw new Error(t('The selected page is not available on this site.'));
+      const overlay = doc.querySelector('[data-ux-overlay]');
+      if (overlay) overlay.remove();
+      frame.style.width = (width + 2) + 'px';
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      await new Promise(resolve => frame.contentWindow.requestAnimationFrame(() => frame.contentWindow.requestAnimationFrame(resolve)));
+      if (typeof frame.contentWindow.__uxMeasureNow !== 'function') injectDemoMeasurer(frame);
+      return frame.contentWindow.__uxMeasureNow(width);
+    }
+
+    function drawDemoMarks(pulseNumber) {
+      if (currentMode !== 'demo' || !demoHasRun || !demoPreview.contentDocument) return;
+      const doc = demoPreview.contentDocument;
+      const previous = doc.querySelector('[data-ux-overlay]');
+      if (previous) previous.remove();
+      const overlay = doc.createElement('div');
+      overlay.setAttribute('data-ux-overlay', '');
+      overlay.setAttribute('aria-hidden', 'true');
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483647;pointer-events:none;overflow:visible;';
+      const style = doc.createElement('style');
+      style.textContent = '@keyframes ux-demo-pulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.15)}50%{box-shadow:0 0 0 8px rgba(220,38,38,.42)}}.ux-demo-pulse{animation:ux-demo-pulse .8s ease-in-out 2;}';
+      overlay.appendChild(style);
+      for (const item of findings.filter(result => result.demoNumber && result.severity !== 'passed')) {
+        for (const targetId of item.targetIds) {
+          const target = doc.querySelector('[data-ux-check-id="' + targetId + '"]');
+          if (!target) continue;
+          const rect = target.getBoundingClientRect();
+          if (!rect.width || !rect.height) continue;
+          const mark = doc.createElement('div');
+          mark.className = 'ux-demo-mark' + (pulseNumber === item.demoNumber ? ' ux-demo-pulse' : '');
+          mark.dataset.demoNumber = String(item.demoNumber);
+          mark.style.cssText = 'position:fixed;left:' + rect.left + 'px;top:' + rect.top + 'px;width:' + rect.width +
+            'px;height:' + rect.height + 'px;box-sizing:border-box;border:2px solid #dc2626;background:rgba(220,38,38,.07);pointer-events:none;';
+          const number = doc.createElement('span');
+          number.textContent = String(item.demoNumber);
+          number.style.cssText = 'position:absolute;left:-2px;top:-22px;min-width:20px;height:20px;padding:0 5px;border-radius:5px 5px 0 0;background:#b91c1c;color:#fff;font:700 12px/20px system-ui,sans-serif;text-align:center;';
+          mark.appendChild(number);
+          overlay.appendChild(mark);
+        }
+      }
+      doc.body.appendChild(overlay);
+    }
+
+    function focusDemoIssue(item) {
+      if (!demoPreview.contentDocument || !item.targetIds.length) return;
+      const target = demoPreview.contentDocument.querySelector('[data-ux-check-id="' + item.targetIds[0] + '"]');
+      if (!target) return;
+      demoPreview.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+      setTimeout(() => drawDemoMarks(item.demoNumber), 320);
+    }
+
+    function setDemoWidth(width) {
+      selectedDemoWidth = width;
+      document.querySelectorAll('.demo-width').forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.width) === width)));
+      demoPreview.style.width = (width + 2) + 'px';
+    }
+
+    async function runDemoChecks() {
+      const path = demoPages[demoSelect.value];
+      if (!path) {
+        status.textContent = t('Choose one of the listed pages first.');
+        return;
+      }
+      currentMode = 'demo';
+      demoHasRun = false;
+      findings = [];
+      activeFilter = 'All';
+      comparison.hidden = true;
+      status.textContent = t('Checking the selected page at three widths…');
+      try {
+        await loadSameSitePage(demoPreview, path);
+        injectDemoMeasurer(demoPreview);
+        demoPreview.contentWindow.addEventListener('scroll', () => { if (demoHasRun) drawDemoMarks(); }, { capture: true, passive: true });
+        for (const width of widths) {
+          const result = await measureDemoFrame(demoPreview, width);
+          mergeResults(width, result.report);
+          status.textContent = t('Measured {width}px. Checking remaining widths…', { width });
+        }
+        await measureDemoFrame(demoPreview, selectedDemoWidth);
+        demoHasRun = true;
+        renderResults();
+        status.textContent = t('Demo checks complete. Select a numbered result to locate it in the page.');
+      } catch (error) {
+        demoHasRun = false;
+        status.textContent = error.message || t('The demo checks could not finish.');
+      }
+    }
+
+    async function compareFixedVersion() {
+      if (!demoHasRun) {
+        status.textContent = t('Run a demo check before comparing.');
+        return;
+      }
+      comparison.hidden = false;
+      comparison.replaceChildren();
+      status.textContent = t('Checking the fixed version at three widths…');
+      try {
+        await loadSameSitePage(compareFrame, demoPages.fixed);
+        injectDemoMeasurer(compareFrame);
+        const compared = [];
+        for (const width of widths) {
+          const result = await measureDemoFrame(compareFrame, width);
+          mergeInto(compared, width, result.report);
+        }
+        const countBy = list => ({
+          errors: list.filter(item => item.severity === 'error').length,
+          warnings: list.filter(item => item.severity === 'warning').length,
+          passed: list.filter(item => item.severity === 'passed').length
+        });
+        const current = countBy(findings);
+        const fixed = countBy(compared);
+        [[t('Selected page'), current], [t('Fixed version'), fixed]].forEach(([label, counts]) => {
+          const card = document.createElement('div');
+          card.className = 'comparison-card';
+          const heading = document.createElement('strong');
+          heading.textContent = label;
+          const detail = document.createElement('span');
+          detail.textContent = t('Errors: {errors} · Warnings: {warnings} · Passed: {passed}', counts);
+          card.append(heading, detail);
+          comparison.appendChild(card);
+        });
+        status.textContent = t('Comparison complete.');
+      } catch (error) {
+        status.textContent = error.message || t('The fixed version could not be checked.');
+      }
+    }
+
+    document.querySelectorAll('.mode-button').forEach(button => button.addEventListener('click', () => {
+      currentMode = button.dataset.mode;
+      const demo = currentMode === 'demo';
+      document.querySelectorAll('.mode-button').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+      pasteMode.hidden = demo;
+      demoMode.hidden = !demo;
+      pastePreview.hidden = demo;
+      if (!demo && demoPreview.contentDocument) {
+        const overlay = demoPreview.contentDocument.querySelector('[data-ux-overlay]');
+        if (overlay) overlay.remove();
+      }
+      findings = [];
+      activeFilter = 'All';
+      demoHasRun = false;
+      summary.textContent = t('Run the UX checks to see a summary.');
+      status.textContent = '';
+      filtersEl.replaceChildren();
+      resultsEl.replaceChildren();
+    }));
+    demoSelect.addEventListener('change', () => {
+      demoHasRun = false;
+      findings = [];
+      activeFilter = 'All';
+      comparison.hidden = true;
+      filtersEl.replaceChildren();
+      resultsEl.replaceChildren();
+      status.textContent = '';
+      summary.textContent = t('Run the selected demo to see its results.');
+      if (demoPreview.contentDocument) {
+        const overlay = demoPreview.contentDocument.querySelector('[data-ux-overlay]');
+        if (overlay) overlay.remove();
+      }
+    });
+    document.getElementById('run-demo').addEventListener('click', runDemoChecks);
+    document.getElementById('compare-fixed').addEventListener('click', compareFixedVersion);
+    document.querySelectorAll('.demo-width').forEach(button => button.addEventListener('click', async () => {
+      const width = Number(button.dataset.width);
+      setDemoWidth(width);
+      if (!demoHasRun) return;
+      try {
+        const result = await measureDemoFrame(demoPreview, width);
+        mergeResults(width, result.report);
+        renderResults();
+      } catch (error) {
+        status.textContent = error.message || t('The selected page could not be measured.');
+      }
+    }));
 
     async function requestMeasurement(width) {
       return new Promise((resolve, reject) => {
