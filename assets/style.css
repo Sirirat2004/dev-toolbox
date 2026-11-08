@@ -66,9 +66,21 @@
   --dark-primary-button-hover: #e2e8f0;
 }
 
+/* Cursor glow values by theme. */
+:root { --glow-size: 420px; --glow-color: #5b4bf5; --glow-opacity: .30; }
+:root[data-theme="dark"] { --glow-size: 420px; --glow-color: #ffffff; --glow-opacity: .14; }
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] { --glow-size: 420px; --glow-color: #ffffff; --glow-opacity: .14; }
+}
+
 * { box-sizing: border-box; }
 html { min-height: 100vh; scroll-behavior: smooth; background: var(--background); }
 body { min-height: 100vh; margin: 0; background: var(--background); color: var(--text); font: 16px/1.55 var(--font-stack); }
+body > :not(#cursor-glow) { position: relative; z-index: 1; }
+#cursor-glow { position: fixed; z-index: 0; top: 0; left: 0; width: var(--glow-size); height: var(--glow-size); border-radius: 50%; pointer-events: none; opacity: 0; background: radial-gradient(circle, var(--glow-color) 0%, transparent 68%); transform: translate3d(-1000px, -1000px, 0); transition: opacity 220ms ease; will-change: transform; }
+#cursor-glow.is-visible { opacity: var(--glow-opacity); }
+@media (hover: hover) and (pointer: fine) { #cursor-glow { display: block; } }
+@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) { #cursor-glow { display: none; } }
 h1, h2, h3, h4 { color: var(--text); letter-spacing: -.035em; line-height: 1.15; }
 p { color: var(--muted-text); }
 a { color: var(--accent); }
